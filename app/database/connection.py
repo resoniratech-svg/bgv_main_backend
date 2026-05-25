@@ -1,16 +1,15 @@
 import pymysql
-from flask import current_app
+from pymysql.cursors import DictCursor
 
 
 def get_connection():
 
     connection = pymysql.connect(
-        host=current_app.config["DB_HOST"],
-        port=current_app.config["DB_PORT"],
-        user=current_app.config["DB_USER"],
-        password=current_app.config["DB_PASSWORD"],
-        database=current_app.config["DB_NAME"],
-        cursorclass=pymysql.cursors.DictCursor
+        host="127.0.0.1",
+        user="root",
+        password="Akanksha123",
+        database="bgv_database",
+        cursorclass=DictCursor
     )
 
     return connection

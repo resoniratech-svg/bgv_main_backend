@@ -9,7 +9,6 @@ from app.routes.candidate_routes import candidate_bp
 # Blueprints
 # ==============================
 from app.routes.auth_routes import auth_bp
-from app.routes.bgv_routes import bgv_bp
 from app.routes.verification_type_routes import verification_type_bp
 
 from app.routes.dashboard_routes import dashboard_bp
@@ -28,13 +27,18 @@ from app.routes.education_routes import education_bp
 from app.routes.face_match_routes import face_match_bp
 from app.routes.ocr_routes import ocr_bp
 from app.routes.resume_routes import resume_bp
-
+from app.routes.bgv_routes import bgv_bp
+from app.routes.candidate_link_routes import candidate_link_bp
+from app.routes.document_routes import document_bp
+from app.routes.health_routes import health_bp
 # ==============================
 # Utils
 # ==============================
 from app.utils.error_handler import register_error_handlers
 from app.utils.logger import setup_logger
-
+from app.routes.submission_routes import (
+    submission_bp
+)
 # ==============================
 # Import Models
 # ==============================
@@ -152,7 +156,26 @@ def create_app():
         credit_check_bp,
         url_prefix="/api/v1/credit_check"
     )
-    
+    app.register_blueprint(
+        candidate_bp,
+        url_prefix="/api/v1"
+    )
+    app.register_blueprint(
+        candidate_link_bp,
+        url_prefix="/api/v1"
+    )
+    app.register_blueprint(
+        document_bp,
+        url_prefix="/api/v1"
+    )
+    app.register_blueprint(
+        submission_bp,
+        url_prefix="/api/v1"
+    )
+    app.register_blueprint(
+        health_bp,
+        url_prefix="/api/v1"
+    )
     app.register_blueprint(aadhaar_bp, url_prefix="/api/v1/aadhaar")
     app.register_blueprint(pan_bp, url_prefix="/api/v1/pan")
     app.register_blueprint(employment_bp, url_prefix="/api/v1/employment")

@@ -1,36 +1,47 @@
-from app.models.bgv_request import BGVRequest
-from app.extensions import db
+from app.database.connection import get_connection
+import uuid
 
 
 class BGVRepository:
 
     @staticmethod
-    def create(data):
-        bgv = BGVRequest(
-            candidate_name=data["candidate_name"],
-            email=data["email"],
-            phone=data["phone"],
-            verification_type=data["verification_type"],
+    def create_bgv_request(data):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        request_id = f"BGV-{uuid.uuid4().hex[:10].upper()}"
+
+        query = """
+        INSERT INTO bgv_requests (
+            candidate_id,
+            request_id,
+            company_name,
+            package_name,
+            status
+        )
+        VALUES (%s, %s, %s, %s, %s)
+        """
+
+        values = (
+            data.get("candidate_id"),
+            request_id,
+            data.get("company_name"),
+            data.get("package_name"),
+            "INITIATED"
         )
 
-        db.session.add(bgv)
-        db.session.flush()
-        return bgv
+        cursor.execute(query, values)
 
-    @staticmethod
-    def get_active_by_id(bgv_id):
-        return BGVRequest.query.filter_by(id=bgv_id, is_deleted=False).first()
+        connection.commit()
 
-    @staticmethod
-    def get_all_active():
-        return BGVRequest.query.filter_by(is_deleted=False).all()
+        bgv_id = cursor.lastrowid
 
-    @staticmethod
-    def update(bgv, data):
-        for key, value in data.items():
-            setattr(bgv, key, value)
-        return bgv
+        cursor.close()
+        connection.close()
 
-    @staticmethod
-    def soft_delete(bgv):
-        bgv.is_deleted = True
+        return {
+            "bgv_id": bgv_id,
+            "request_id": request_id
+        }

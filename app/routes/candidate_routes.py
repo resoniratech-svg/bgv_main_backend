@@ -28,8 +28,13 @@ def create_candidate():
         return jsonify(result), 201
 
     except Exception as e:
-
+        error_message = str(e)
+        if "Duplicate entry" in error_message:
+            return jsonify({
+                "status": "error",
+                "message": "Candidate email already exists"
+            }), 400
         return jsonify({
             "status": "error",
-            "message": str(e)
+            "message": "Internal server error"
         }), 500
