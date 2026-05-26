@@ -31,6 +31,12 @@ from app.routes.bgv_routes import bgv_bp
 from app.routes.candidate_link_routes import candidate_link_bp
 from app.routes.document_routes import document_bp
 from app.routes.health_routes import health_bp
+from app.routes.pdf_report_routes import (
+    pdf_report_bp
+)
+from app.routes.didit_routes import (
+    didit_bp
+)
 # ==============================
 # Utils
 # ==============================
@@ -174,6 +180,14 @@ def create_app():
     )
     app.register_blueprint(
         health_bp,
+        url_prefix="/api/v1"
+    )
+    app.register_blueprint(
+        pdf_report_bp,
+        url_prefix="/api/v1"
+    )
+    app.register_blueprint(
+        didit_bp,
         url_prefix="/api/v1"
     )
     app.register_blueprint(aadhaar_bp, url_prefix="/api/v1/aadhaar")
