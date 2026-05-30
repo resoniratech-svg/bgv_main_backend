@@ -44,3 +44,4 @@ migrations/__pycache__/
 # Temporary Files
 *.tmp
 *.temp
+generated_reports/
