@@ -10,6 +10,9 @@ load_dotenv()
 class BaseConfig:
     DEBUG = False
 
+    # to send request to candidates
+    FRONTEND_URL = os.getenv("FRONTEND_URL")
+
     # ==============================
     # Database Configuration
     # ==============================

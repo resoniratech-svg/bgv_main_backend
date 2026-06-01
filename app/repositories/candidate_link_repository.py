@@ -1,4 +1,5 @@
 from flask import Config
+from config import Config
 
 from app.database.connection import get_connection
 

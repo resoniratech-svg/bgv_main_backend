@@ -55,3 +55,24 @@ class AIServiceConnector:
         )
 
         return response.json()
+    
+    @staticmethod
+    def parse_resume(file_path, candidate_id):
+
+        url = f"{AI_SERVICE_BASE_URL}/resume/parse"
+
+        files = {
+            "resume": open(file_path, "rb")
+        }
+
+        data = {
+            "candidate_id": candidate_id
+        }
+
+        response = requests.post(
+            url,
+            files=files,
+            data=data
+        )
+
+        return response.json()

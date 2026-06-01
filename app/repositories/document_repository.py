@@ -141,3 +141,34 @@ class DocumentRepository:
         connection.close()
 
         return document
+    
+    @staticmethod
+    def get_resume_document(candidate_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            id,
+            file_path,
+            original_filename
+        FROM candidate_uploaded_documents
+        WHERE candidate_id = %s
+        AND document_type = 'Resume'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+
+        cursor.execute(
+            query,
+            (candidate_id,)
+        )
+
+        document = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return document
