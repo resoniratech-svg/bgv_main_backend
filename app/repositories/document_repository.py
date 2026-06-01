@@ -1,3 +1,4 @@
+from app.database import connection
 from app.database.connection import get_connection
 
 
@@ -55,3 +56,88 @@ class DocumentRepository:
         return {
             "document_id": document_id
         }
+
+
+    @staticmethod
+    def get_candidate_documents(candidate_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+        query = """
+        SELECT
+            id,
+            document_type,
+            original_filename,
+            stored_filename,
+            file_path,
+            upload_status
+        FROM candidate_uploaded_documents
+        WHERE candidate_id = %s
+        """
+
+        print("CANDIDATE ID:", candidate_id)
+
+        cursor.execute(
+            query,
+            (candidate_id,)
+        )
+
+        rows = cursor.fetchall()
+
+        print("RAW ROWS:", rows)
+
+        documents = []
+
+        for row in rows:
+
+            documents.append({
+
+                "id": row["id"],
+
+                "document_type": row["document_type"],
+
+                "original_filename": row["original_filename"],
+
+                "stored_filename": row["stored_filename"],
+
+                "file_path": row["file_path"],
+
+                "upload_status": row["upload_status"]
+
+            })
+
+        print("DOCUMENTS:", documents)
+
+        cursor.close()
+        connection.close()
+
+        return documents
+    
+    @staticmethod
+    def get_document_by_id(document_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            id,
+            file_path,
+            original_filename
+        FROM candidate_uploaded_documents
+        WHERE id = %s
+        """
+
+        cursor.execute(
+            query,
+            (document_id,)
+        )
+
+        document = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return document

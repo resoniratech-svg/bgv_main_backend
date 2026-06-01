@@ -12,7 +12,7 @@ class DashboardService:
         
         return {
             "total_requests": total,
-            "pending": pending,
+            "PENDING": pending,
             "completed": completed,
             "rejected": rejected
         }

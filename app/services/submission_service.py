@@ -1,3 +1,6 @@
+from app.repositories.candidate_repository import (
+    CandidateRepository
+)
 from app.services.verification_orchestrator_service import (
     VerificationOrchestratorService
 )
@@ -45,6 +48,14 @@ class SubmissionService:
             SubmissionRepository.create_submission(
                 data
             )
+        )
+        CandidateRepository.update_candidate_status(
+
+            candidate_data["candidate_id"],
+
+            {
+                "status": "DOCUMENTS_UPLOADED"
+            }
         )
         VerificationOrchestratorService.start_verification_process(
 

@@ -28,3 +28,41 @@ class CandidateService:
             "message": "Candidate created successfully",
             "data": result
         }
+
+    @staticmethod
+    def get_all_candidates():
+
+        return CandidateRepository.get_all_candidates()
+    
+    @staticmethod
+    def get_candidate_by_id(candidate_id):
+
+        return CandidateRepository.get_candidate_by_id(
+            candidate_id
+        )
+    @staticmethod
+    def update_candidate_status(candidate_id, data):
+
+        return CandidateRepository.update_candidate_status(
+            candidate_id,
+            data
+        )
+    @staticmethod
+    def update_candidate(candidate_id, data):
+
+        result = CandidateRepository.update_candidate(
+            candidate_id,
+            data
+        )
+
+        return {
+            "status": "success",
+            "message": "Candidate updated successfully",
+            "data": result
+        }
+    @staticmethod
+    def delete_candidate(candidate_id):
+
+        return CandidateRepository.delete_candidate(
+            candidate_id
+        )

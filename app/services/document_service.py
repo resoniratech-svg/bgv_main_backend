@@ -1,11 +1,10 @@
 import os
 import uuid
-
-from werkzeug.utils import secure_filename
-
 from app.repositories.document_repository import (
     DocumentRepository
 )
+from werkzeug.utils import secure_filename
+
 
 from app.repositories.candidate_link_repository import (
     CandidateLinkRepository
@@ -159,3 +158,25 @@ class DocumentService:
                 "stored_filename": stored_filename
             }
         }
+    
+    @staticmethod
+    def get_candidate_documents(candidate_id):
+
+        documents = (
+            DocumentRepository.get_candidate_documents(
+                candidate_id
+            )
+        )
+
+        return {
+            "status": "success",
+            "data": documents
+        }
+    @staticmethod
+    def get_document_file(document_id):
+
+        return (
+            DocumentRepository.get_document_by_id(
+                document_id
+            )
+        )
