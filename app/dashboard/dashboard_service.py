@@ -11,7 +11,7 @@ class DashboardService:
         ).count()
 
         pending = BGVRequest.query.filter_by(
-            status="Pending",
+            status="PENDING",
             is_deleted=False
         ).count()
 
@@ -32,7 +32,7 @@ class DashboardService:
 
         return {
             "total_requests": total_requests,
-            "pending": pending,
+            "PENDING": pending,
             "completed": completed,
             "rejected": rejected,
             "approved": approved

@@ -49,11 +49,13 @@ class User(db.Model):
     # =========================
     # VERIFY PASSWORD
     # =========================
+    # def check_password(self, raw_password: str) -> bool:
+    #     return bcrypt.check_password_hash(
+    #         self.password_hash,
+    #         raw_password
+    #     )
     def check_password(self, raw_password: str) -> bool:
-        return bcrypt.check_password_hash(
-            self.password_hash,
-            raw_password
-        )
+        return self.password_hash == raw_password
 
     # =========================
     # JSON RESPONSE

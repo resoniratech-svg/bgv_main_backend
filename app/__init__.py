@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from sqlalchemy import text
 
-from app.config import Config
+from config import Config
 from app.extensions import db, jwt, bcrypt, migrate, limiter
 from app.routes.candidate_routes import candidate_bp
 # ==============================

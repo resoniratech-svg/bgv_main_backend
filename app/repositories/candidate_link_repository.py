@@ -1,3 +1,5 @@
+from flask import Config
+
 from app.database.connection import get_connection
 
 from datetime import datetime, timedelta
@@ -46,7 +48,7 @@ class CandidateLinkRepository:
         connection.close()
 
         upload_url = (
-            f"http://localhost:3000/upload/{secure_token}"
+            f"{Config.FRONTEND_URL}/upload/{secure_token}"
         )
 
         return {
@@ -70,6 +72,13 @@ class CandidateLinkRepository:
             cal.bgv_id,
             cal.status,
             cal.expires_at,
+
+            CONCAT(
+                c.first_name,
+                ' ',
+                c.last_name
+            ) AS full_name,
+
             c.first_name,
             c.last_name,
             c.email

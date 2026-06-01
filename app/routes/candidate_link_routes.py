@@ -31,12 +31,17 @@ def generate_secure_link():
 
         return jsonify(result), 201
 
-    except Exception:
+    except Exception as e:
+
+        import traceback
+        traceback.print_exc()
 
         return jsonify({
             "status": "error",
-            "message": "Internal server error"
+            "message": str(e)
         }), 500
+    
+    
 @candidate_link_bp.route(
     "/candidate/validate-link/<secure_token>",
     methods=["GET"]
