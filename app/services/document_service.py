@@ -109,13 +109,22 @@ class DocumentService:
             f"{uuid.uuid4().hex}.{extension}"
         )
 
-        os.makedirs(
+        candidate_folder = os.path.join(
+
             DocumentService.UPLOAD_FOLDER,
+
+            f"candidate_{candidate_data['candidate_id']}",
+
+            document_type
+        )
+
+        os.makedirs(
+            candidate_folder,
             exist_ok=True
         )
 
         file_path = os.path.join(
-            DocumentService.UPLOAD_FOLDER,
+            candidate_folder,
             stored_filename
         )
 
