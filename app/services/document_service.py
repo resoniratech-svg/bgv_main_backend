@@ -150,7 +150,8 @@ class DocumentService:
 
             "file_size": os.path.getsize(file_path)
         }
-
+        print("DEBUG candidate_data =", candidate_data)
+        print("DEBUG bgv_id =", candidate_data["bgv_id"])
         result = (
             DocumentRepository.save_uploaded_document(
                 data

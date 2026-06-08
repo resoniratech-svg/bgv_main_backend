@@ -43,6 +43,8 @@ def upload_document():
         return jsonify(result), 201
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
 
         return jsonify({
             "status": "error",

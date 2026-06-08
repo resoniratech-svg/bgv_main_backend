@@ -67,16 +67,20 @@ class CandidateLinkRepository:
         SELECT
             cal.id,
             cal.candidate_id,
-            cal.bgv_id,
+            br.bgv_id,
             cal.status,
             cal.expires_at,
             c.first_name,
             c.last_name,
             c.email
+
         FROM candidate_access_links cal
 
         INNER JOIN candidates c
             ON cal.candidate_id = c.id
+
+        INNER JOIN bgv_requests br
+            ON cal.bgv_id = br.id
 
         WHERE cal.secure_token = %s
         """

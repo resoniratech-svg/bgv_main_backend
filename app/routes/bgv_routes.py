@@ -25,17 +25,13 @@ def create_bgv_request():
         return jsonify(result), 201
 
     except Exception as e:
+        import traceback
 
-        error_message = str(e)
-
-        if "foreign key constraint fails" in error_message.lower():
-
-            return jsonify({
-                "status": "error",
-                "message": "Invalid candidate_id"
-            }), 400
+        traceback.print_exc()
 
         return jsonify({
             "status": "error",
-            "message": "Internal server error"
+            "message": str(e)
         }), 500
+
+        

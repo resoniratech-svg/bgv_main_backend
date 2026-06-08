@@ -11,12 +11,12 @@ class BGVRepository:
 
         cursor = connection.cursor()
 
-        request_id = f"BGV-{uuid.uuid4().hex[:10].upper()}"
+        bgv_id = f"BGV-{uuid.uuid4().hex[:10].upper()}"
 
         query = """
         INSERT INTO bgv_requests (
             candidate_id,
-            request_id,
+            bgv_id,
             company_name,
             package_name,
             status
@@ -26,7 +26,7 @@ class BGVRepository:
 
         values = (
             data.get("candidate_id"),
-            request_id,
+            bgv_id,
             data.get("company_name"),
             data.get("package_name"),
             "INITIATED"
@@ -36,12 +36,12 @@ class BGVRepository:
 
         connection.commit()
 
-        bgv_id = cursor.lastrowid
+        record_id = cursor.lastrowid
 
         cursor.close()
         connection.close()
 
         return {
-            "bgv_id": bgv_id,
-            "request_id": request_id
+            "id": record_id,
+            "bgv_id": bgv_id
         }
