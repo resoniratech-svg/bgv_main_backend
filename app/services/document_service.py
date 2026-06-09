@@ -22,6 +22,7 @@ class DocumentService:
         document_type,
         file
     ):
+
         validation_result = (
             CandidateLinkRepository.validate_secure_token(
                 secure_token
@@ -75,18 +76,14 @@ class DocumentService:
 
             return {
                 "status": "error",
-                "message": (
-                    "Unsupported file type"
-                )
+                "message": "Unsupported file type"
             }
 
         if file.mimetype not in allowed_mime_types:
 
             return {
                 "status": "error",
-                "message": (
-                    "Invalid mime type"
-                )
+                "message": "Invalid mime type"
             }
 
         MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -98,11 +95,10 @@ class DocumentService:
         file.seek(0)
 
         if file_size > MAX_FILE_SIZE:
+
             return {
                 "status": "error",
-                "message": (
-                    "File size exceeds 10MB"
-                )
+                "message": "File size exceeds 10MB"
             }
 
         stored_filename = (
@@ -116,6 +112,7 @@ class DocumentService:
             f"candidate_{candidate_data['candidate_id']}",
 
             document_type
+
         )
 
         os.makedirs(
@@ -123,12 +120,38 @@ class DocumentService:
             exist_ok=True
         )
 
-        file_path = os.path.join(
+        relative_file_path = os.path.join(
             candidate_folder,
             stored_filename
         )
 
-        file.save(file_path)
+        file.save(
+            relative_file_path
+        )
+
+        # ======================================
+        # PRODUCTION FIX
+        # STORE ABSOLUTE PATH IN DATABASE
+        # ======================================
+
+        absolute_file_path = os.path.abspath(
+            relative_file_path
+        )
+
+        absolute_file_path = absolute_file_path.replace(
+            "\\",
+            "/"
+        )
+
+        saved_file_size = os.path.getsize(
+            relative_file_path
+        )
+
+        if saved_file_size == 0:
+
+            raise Exception(
+                "Uploaded file is empty after save"
+            )
 
         data = {
 
@@ -144,14 +167,22 @@ class DocumentService:
 
             "stored_filename": stored_filename,
 
-            "file_path": file_path,
+            "file_path": absolute_file_path,
 
             "mime_type": file.mimetype,
 
-            "file_size": os.path.getsize(file_path)
+            "file_size": saved_file_size
         }
-        print("DEBUG candidate_data =", candidate_data)
-        print("DEBUG bgv_id =", candidate_data["bgv_id"])
+
+        print("=" * 80)
+        print("DOCUMENT UPLOAD DEBUG")
+        print("=" * 80)
+        print("RELATIVE PATH =", relative_file_path)
+        print("ABSOLUTE PATH =", absolute_file_path)
+        print("FILE EXISTS =", os.path.exists(relative_file_path))
+        print("FILE SIZE =", saved_file_size)
+        print("=" * 80)
+
         result = (
             DocumentRepository.save_uploaded_document(
                 data
@@ -165,7 +196,10 @@ class DocumentService:
             "message": "Document uploaded successfully",
 
             "data": {
+
                 "document_id": result["document_id"],
+
                 "stored_filename": stored_filename
+
             }
         }
