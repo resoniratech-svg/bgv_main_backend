@@ -76,3 +76,25 @@ class AIServiceConnector:
         )
 
         return response.json()
+    
+    @staticmethod
+    def screen_watchlist(
+        candidate_id,
+        full_name,
+        country=None
+    ):
+
+        url = f"{AI_SERVICE_BASE_URL}/watchlist/screen"
+
+        payload = {
+            "candidate_id": candidate_id,
+            "full_name": full_name,
+            "country": country
+        }
+
+        response = requests.post(
+            url,
+            json=payload
+        )
+
+        return response.json()

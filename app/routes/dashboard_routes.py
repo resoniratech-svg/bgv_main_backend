@@ -8,7 +8,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 
 @dashboard_bp.route("/summary", methods=["GET"])
 @jwt_required()
-@role_required("Admin")
+@role_required("SUPER_ADMIN")
 def summary():
     data = DashboardService.get_summary()
 

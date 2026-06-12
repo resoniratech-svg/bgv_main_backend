@@ -39,5 +39,14 @@ def create_consent():
         }), 201
 
     except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+
+        import traceback
+
+        print("\n========== CANDIDATE ERROR ==========")
+        traceback.print_exc()
+        print("=====================================\n")
+
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500

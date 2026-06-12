@@ -1,3 +1,5 @@
+from flask import jsonify
+
 from app.database.connection import get_connection
 import uuid
 
@@ -50,29 +52,51 @@ class CandidateRepository:
     @staticmethod
     def get_all_candidates():
 
-        connection = get_connection()
+        try:
 
-        cursor = connection.cursor()
+            print("GET_ALL_CANDIDATES START")
 
-        query = """
-        SELECT
-            id,
-            CONCAT(first_name, ' ', last_name) AS full_name,
-            email,
-            phone,
-            status
-        FROM candidates
-        WHERE is_deleted = 0
-        """
+            connection = get_connection()
+            print("DB CONNECTED")
 
-        cursor.execute(query)
+            cursor = connection.cursor()
+            print("CURSOR CREATED")
 
-        candidates = cursor.fetchall()
+            query = """
+            SELECT
+                id,
+                CONCAT(first_name, ' ', last_name) AS full_name,
+                email,
+                phone,
+                status,
+                DATE(created_at) AS created_at,
+                DATE(updated_at) AS updated_at
+            FROM candidates
+            WHERE is_deleted = 0
+            """
 
-        cursor.close()
-        connection.close()
+            cursor.execute(query)
+            print("QUERY EXECUTED")
 
-        return candidates
+            candidates = cursor.fetchall()
+            print("FETCH COMPLETE:", len(candidates))
+
+            cursor.close()
+            connection.close()
+
+            print("GET_ALL_CANDIDATES END")
+
+            return candidates
+
+        except Exception as e:
+
+            import traceback
+
+            print("\n========== REPOSITORY ERROR ==========")
+            traceback.print_exc()
+            print("======================================\n")
+
+            raise
     @staticmethod
     def get_candidate_by_id(candidate_id):
 
@@ -86,7 +110,9 @@ class CandidateRepository:
             CONCAT(first_name, ' ', last_name) AS full_name,
             email,
             phone,
-            status
+            status,
+            DATE(created_at) AS created_at,
+            DATE(updated_at) AS updated_at
         FROM candidates
         WHERE id = %s
         """
@@ -109,22 +135,75 @@ class CandidateRepository:
 
         query = """
         UPDATE candidates
-        SET status = %s
+        SET
+            status = %s,
+            updated_at = NOW()
         WHERE id = %s
-        """
+"""
+
+        status = data.get("status")
 
         cursor.execute(
             query,
             (
-                data.get("status"),
+                status,
                 candidate_id
             )
         )
 
         connection.commit()
-
         cursor.close()
         connection.close()
+        # =====================================
+        # SEND EMAIL WHEN DOCUMENTS SUBMITTED
+        # =====================================
+
+        if status == "DOCUMENTS_SUBMITTED":
+
+            try:
+
+                from app.services.email_service import (
+                    EmailService
+                )
+
+                candidate = (
+                    CandidateRepository.get_candidate_by_id(
+                        candidate_id
+                    )
+                )
+
+                EmailService.send_admin_alert(
+
+                    subject="Candidate Documents Submitted",
+
+                    message=f"""
+        Candidate Name: {candidate.get('full_name')}
+
+        Candidate ID: {candidate.get('id')}
+
+        Status: DOCUMENTS_SUBMITTED
+
+        Candidate has uploaded documents successfully.
+        Start verification process.
+        """
+                )
+
+                print(
+                    "DOCUMENT SUBMISSION EMAIL SENT"
+                )
+
+            except Exception as e:
+
+                import traceback
+
+                traceback.print_exc()
+
+                return jsonify({
+                    "status": "error",
+                    "message": str(e)
+                }), 500
+
+        
 
         return {
             "status": "success",

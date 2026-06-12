@@ -140,6 +140,10 @@ class DocumentService:
 
             "file_size": os.path.getsize(file_path)
         }
+        DocumentRepository.delete_existing_document(
+            candidate_data["candidate_id"],
+            document_type
+        )
 
         result = (
             DocumentRepository.save_uploaded_document(

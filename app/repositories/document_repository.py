@@ -3,7 +3,69 @@ from app.database.connection import get_connection
 
 
 class DocumentRepository:
+    @staticmethod
+    def get_existing_document(
+        candidate_id,
+        document_type
+    ):
 
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            id,
+            file_path,
+            stored_filename
+        FROM candidate_uploaded_documents
+        WHERE candidate_id = %s
+        AND document_type = %s
+        LIMIT 1
+        """
+
+        cursor.execute(
+            query,
+            (
+                candidate_id,
+                document_type
+            )
+        )
+
+        document = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return document
+    @staticmethod
+    def delete_existing_document(
+        candidate_id,
+        document_type
+    ):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        DELETE FROM candidate_uploaded_documents
+        WHERE candidate_id = %s
+        AND document_type = %s
+        """
+
+        cursor.execute(
+            query,
+            (
+                candidate_id,
+                document_type
+            )
+        )
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
     @staticmethod
     def save_uploaded_document(data):
 
@@ -115,6 +177,31 @@ class DocumentRepository:
         return documents
     
     @staticmethod
+    def count_candidate_documents(candidate_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        SELECT COUNT(*) AS total
+        FROM candidate_uploaded_documents
+        WHERE candidate_id = %s
+        """
+
+        cursor.execute(
+            query,
+            (candidate_id,)
+        )
+
+        result = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return result["total"]
+
+    @staticmethod
     def get_document_by_id(document_id):
 
         connection = get_connection()
@@ -125,7 +212,8 @@ class DocumentRepository:
         SELECT
             id,
             file_path,
-            original_filename
+            original_filename,
+            document_type
         FROM candidate_uploaded_documents
         WHERE id = %s
         """
@@ -140,7 +228,16 @@ class DocumentRepository:
         cursor.close()
         connection.close()
 
-        return document
+        if not document:
+
+            return None
+
+        return {
+            "id": document["id"],
+            "file_path": document["file_path"],
+            "original_filename": document["original_filename"],
+            "document_type": document["document_type"]
+        }
     
     @staticmethod
     def get_resume_document(candidate_id):

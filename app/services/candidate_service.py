@@ -33,13 +33,14 @@ class CandidateService:
     def get_all_candidates():
 
         return CandidateRepository.get_all_candidates()
-    
+
     @staticmethod
     def get_candidate_by_id(candidate_id):
 
         return CandidateRepository.get_candidate_by_id(
             candidate_id
         )
+
     @staticmethod
     def update_candidate_status(candidate_id, data):
 
@@ -47,6 +48,7 @@ class CandidateService:
             candidate_id,
             data
         )
+
     @staticmethod
     def update_candidate(candidate_id, data):
 
@@ -60,6 +62,7 @@ class CandidateService:
             "message": "Candidate updated successfully",
             "data": result
         }
+
     @staticmethod
     def delete_candidate(candidate_id):
 

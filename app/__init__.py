@@ -1,7 +1,13 @@
 from flask import Flask
 from flask_cors import CORS
+from app.routes.fraud_routes import fraud_bp
 from sqlalchemy import text
-
+from app.routes.candidate_verification_summary_routes import (
+    verification_summary_bp
+)
+# from app.routes.verification_summary_routes import (
+#     verification_summary_bp
+# )
 from config import Config
 from app.extensions import db, jwt, bcrypt, migrate, limiter
 from app.routes.candidate_routes import candidate_bp
@@ -9,8 +15,11 @@ from app.routes.candidate_routes import candidate_bp
 # Blueprints
 # ==============================
 from app.routes.auth_routes import auth_bp
+from app.routes.user_routes import user_bp
 from app.routes.verification_type_routes import verification_type_bp
-
+from app.routes.candidate_verification_summary_routes import (
+    verification_summary_bp
+)
 from app.routes.dashboard_routes import dashboard_bp
 from app.routes.report_routes import report_bp
 from app.routes.compliance_routes import compliance_bp
@@ -96,7 +105,7 @@ def create_app():
     jwt.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
-    limiter.init_app(app)
+    # limiter.init_app(app)
 
     # ==============================
     # Register Blueprints
@@ -106,6 +115,10 @@ def create_app():
     app.register_blueprint(
         auth_bp,
         url_prefix="/api/v1/auth"
+    )
+    app.register_blueprint(
+        user_bp,
+        url_prefix="/api/v1/users"
     )
     # BGV APIs
     app.register_blueprint(
@@ -124,6 +137,11 @@ def create_app():
     app.register_blueprint(
         dashboard_bp,
         url_prefix="/api/v1/dashboard"
+    )
+    # fraud center
+    app.register_blueprint(
+        fraud_bp,
+        url_prefix="/api/v1/fraud"
     )
 
     # Report APIs
@@ -197,6 +215,13 @@ def create_app():
     app.register_blueprint(face_match_bp, url_prefix="/api/v1/face_match")
     app.register_blueprint(ocr_bp, url_prefix="/api/v1")
     app.register_blueprint(resume_bp, url_prefix="/api/v1/resume")
+    # ==============================
+    # verification summary
+    # ==============================
+    app.register_blueprint(
+    verification_summary_bp,
+    url_prefix="/api/v1/verification-summary"
+)
 
     # ==============================
     # Logger

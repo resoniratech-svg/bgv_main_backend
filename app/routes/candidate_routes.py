@@ -57,7 +57,7 @@ def get_candidates():
 
         candidates = CandidateService.get_all_candidates()
 
-        print(candidates)
+        #print(candidates)
 
         return jsonify(candidates), 200
 

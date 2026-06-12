@@ -1,7 +1,13 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from app.utils.rbac import role_required
-
+from app.services.watchlist_service import WatchlistService
+from app.services.candidate_verification_summary_service import (
+    CandidateVerificationSummaryService
+)
+from app.repositories.watchlist_repository import (
+    WatchlistRepository
+)
 
 global_database_bp = Blueprint("global_database", __name__)
 
@@ -20,21 +26,132 @@ def global_database_health():
 
 
 # ==========================
-# GLOBAL DATABASE VERIFICATION
+# GLOBAL WATCHLIST + AML SCREENING
 # ==========================
-@global_database_bp.route("/verify", methods=["POST"])
-@jwt_required()
-@role_required("Admin", "Verifier")
-def verify_global_database():
+@global_database_bp.route(
+    "/screen/<int:candidate_id>",
+    methods=["POST"]
+)
+@jwt_required(optional=True)
+def screen_watchlist(candidate_id):
+
+    try:
+
+        result = (
+            WatchlistService.screen_candidate(
+                candidate_id
+            )
+        )
+
+        if result.get("success"):
+
+            risk_level = result.get(
+                "risk_level",
+                "LOW"
+            )
+
+            CandidateVerificationSummaryService.update_module_status(
+                candidate_id=candidate_id,
+                module_name="Watchlist",
+                status="PENDING_REVIEW",
+                risk_level=risk_level
+            )
+
+        return jsonify(result), 200
+
+    except Exception as e:
+
+        import traceback
+
+        traceback.print_exc()
+
+        print("GLOBAL DATABASE ERROR:")
+        print(str(e))
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@global_database_bp.route(
+    "/decision",
+    methods=["POST"]
+)
+def save_watchlist_decision():
 
     data = request.get_json()
 
-    candidate_name = data.get("candidate_name")
-    database_status = data.get("database_status")
+    candidate_id = data.get(
+        "candidate_id"
+    )
 
-    return jsonify({
-        "status": "success",
-        "candidate_name": candidate_name,
-        "database_status": database_status,
-        "verification_status": "Verified"
-    }), 200
+    decision = data.get(
+        "decision"
+    )
+
+    watchlist_result = (
+        WatchlistService.get_candidate_result(
+            candidate_id
+        )
+    )
+
+    risk_level = None
+
+    if watchlist_result:
+
+        risk_level = watchlist_result.get(
+            "risk_level"
+        )
+
+    result = (
+        CandidateVerificationSummaryService
+        .update_module_status(
+            candidate_id=candidate_id,
+            module_name="Watchlist",
+            status=decision,
+            risk_level=risk_level
+        )
+    )
+
+    return jsonify(result), 200
+
+
+@global_database_bp.route(
+    "/result/<int:candidate_id>",
+    methods=["GET"]
+)
+def get_watchlist_result(candidate_id):
+
+    try:
+
+        result = (
+            WatchlistService.get_candidate_result(
+                candidate_id
+            )
+        )
+
+        print("WATCHLIST RESULT:")
+        print(result)
+
+        if not result:
+
+            return jsonify({
+                "success": False,
+                "message": "No watchlist result found"
+            }), 404
+
+        return jsonify(result), 200
+
+    except Exception as e:
+
+        import traceback
+        traceback.print_exc()
+
+        print("WATCHLIST RESULT ERROR:")
+        print(str(e))
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500

@@ -28,6 +28,11 @@ class CandidateLinkService:
                     "message": f"{field} is required"
                 }
 
+        print("================================")
+        print("GENERATE LINK REQUEST")
+        print("CANDIDATE ID:", data.get("candidate_id"))
+        print("BGV ID:", data.get("bgv_id"))
+        print("================================")
         result = (
         CandidateLinkRepository.create_secure_link(data)
     )

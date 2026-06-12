@@ -45,3 +45,39 @@ class BGVRepository:
             "bgv_id": bgv_id,
             "request_id": request_id
         }
+    @staticmethod
+    def get_bgv_by_candidate_id(candidate_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        SELECT id
+        FROM bgv_requests
+        WHERE candidate_id = %s
+        ORDER BY id DESC
+        LIMIT 1
+        """
+
+        cursor.execute(
+            query,
+            (candidate_id,)
+        )
+
+        row = cursor.fetchone()
+
+        if row:
+
+            bgv = {
+                "id": row[0]
+            }
+
+        else:
+
+            bgv = None
+
+        cursor.close()
+        connection.close()
+
+        return bgv

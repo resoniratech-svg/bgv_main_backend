@@ -18,7 +18,7 @@ class CandidateLinkRepository:
 
         secure_token = uuid.uuid4().hex
 
-        expires_at = datetime.utcnow() + timedelta(hours=48)
+        expires_at = datetime.now() + timedelta(hours=48)
 
         query = """
         INSERT INTO candidate_access_links (
