@@ -1,39 +1,75 @@
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
-from app.utils.rbac import role_required
+from flask import Blueprint
+from flask import request
+from flask import jsonify
+
+from flask_jwt_extended import (
+    jwt_required
+)
+
+from app.services.passport_service import (
+    PassportService
+)
+
+passport_bp = Blueprint(
+
+    "passport",
+
+    __name__
+)
 
 
-passport_bp = Blueprint("passport", __name__)
-
-
-# ==========================
-# PASSPORT MODULE HEALTH
-# ==========================
-@passport_bp.route("/health", methods=["GET"])
-def passport_health():
-
-    return jsonify({
-        "status": "success",
-        "module": "Passport Verification Module",
-        "message": "Passport module working successfully"
-    }), 200
-
-
-# ==========================
-# PASSPORT VERIFICATION
-# ==========================
-@passport_bp.route("/verify", methods=["POST"])
+@passport_bp.route(
+    "/verify",
+    methods=["POST"]
+)
 @jwt_required()
-@role_required("Admin", "Verifier")
 def verify_passport():
 
-    data = request.get_json()
+    try:
 
-    passport_number = data.get("passport_number")
+        data = request.get_json()
 
-    return jsonify({
-        "status": "success",
-        "passport_number": passport_number,
-        "verification_status": "Verified",
-        "remarks": "Passport verified successfully"
-    }), 200
+        candidate_id = data.get(
+            "candidate_id"
+        )
+
+        bgv_id = data.get(
+            "bgv_id"
+        )
+
+        document_id = data.get(
+            "document_id"
+        )
+
+        token = request.headers.get(
+            "Authorization"
+        )
+
+        result = (
+
+            PassportService
+            .verify_passport(
+
+                candidate_id,
+                bgv_id,
+                document_id,
+                token
+
+            )
+
+        )
+
+        return jsonify(
+            result
+        )
+
+    except Exception as error:
+
+        return jsonify({
+
+            "status": "error",
+
+            "message":
+            str(error)
+
+        }), 500
