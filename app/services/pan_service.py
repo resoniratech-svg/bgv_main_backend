@@ -61,3 +61,27 @@ class PanService:
 
             "data": result
         }
+    
+    @staticmethod
+    def get_result(
+
+        candidate_id,
+
+        token
+
+):
+
+
+        return (
+
+        AIServiceConnector
+
+        .get_pan_result(
+
+            candidate_id,
+
+            token
+
+        )
+
+    )
