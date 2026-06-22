@@ -10,9 +10,10 @@ class WatchlistRepository:
 
         cursor = connection.cursor()
 
+        # Updated to point to the correct table
         query = """
             SELECT *
-            FROM watchlist_results
+            FROM global_watchlist_results
             WHERE candidate_id = %s
             ORDER BY id DESC
             LIMIT 1
@@ -24,9 +25,6 @@ class WatchlistRepository:
         )
 
         result = cursor.fetchone()
-
-        print("WATCHLIST DB RESULT:")
-        print(result)
 
         cursor.close()
         connection.close()

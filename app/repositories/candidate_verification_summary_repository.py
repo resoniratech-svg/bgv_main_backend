@@ -3,18 +3,74 @@ from app.database.connection import get_connection
 
 
 class CandidateVerificationSummaryRepository:
+    @staticmethod
+    def get_fraud_cases():
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        status_columns = [
+            ("aadhaar_status", "Aadhaar Verification"),
+            ("pan_status", "PAN Verification"),
+            ("passport_status", "Passport Verification"),
+            ("face_match_status", "Face Match"),
+            ("resume_status", "Resume Parsing"),
+            ("education_status", "Education Verification"),
+            ("employment_status", "Employment Verification"),
+            ("credit_status", "Credit Check"),
+            ("court_status", "Court Records Check"),
+            ("watchlist_status", "Watchlist Screening"),
+            ("dl_status", "Driving License Verification"),
+            ("deepfake_status", "Deepfake Detection"),
+            ("salary_slip_status", "Salary Slip Verification"),
+        ]
+
+        queries = []
+
+        for column, module in status_columns:
+            queries.append(f"""
+
+            SELECT
+
+            candidate_id,
+            candidate_name,
+
+            '{module}' AS module,
+
+            COALESCE(risk_level,'HIGH') AS risk_level,
+
+            UPPER({column}) AS status
+
+            FROM candidate_verification_summary
+
+            WHERE
+
+            {column} IS NOT NULL
+
+            AND UPPER({column}) NOT IN (
+
+            'VERIFIED',
+            'PENDING_REVIEW'
+
+            )
+
+            """)
+
+        final_query = " UNION ALL ".join(queries)
+
+        cursor.execute(final_query)
+
+        rows = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return rows
 
     @staticmethod
     def create_or_update_module_status(
-
-        candidate_id,
-        candidate_name,
-        email,
-        phone,
-        column_name,
-        status,
-        risk_level=None
-
+        candidate_id, candidate_name, email, phone, column_name, status, risk_level=None
     ):
 
         connection = get_connection()
@@ -27,15 +83,11 @@ class CandidateVerificationSummaryRepository:
         WHERE candidate_id = %s
         """
 
-        cursor.execute(
-            check_query,
-            (candidate_id,)
-        )
+        cursor.execute(check_query, (candidate_id,))
 
         existing = cursor.fetchone()
 
         if existing:
-
             query = f"""
             UPDATE candidate_verification_summary
             SET
@@ -45,19 +97,9 @@ class CandidateVerificationSummaryRepository:
             WHERE candidate_id = %s
             """
 
-            cursor.execute(
-
-                query,
-
-                (
-                    status,
-                    risk_level,
-                    candidate_id
-                )
-            )
+            cursor.execute(query, (status, risk_level, candidate_id))
 
         else:
-
             query = f"""
             INSERT INTO
             candidate_verification_summary (
@@ -83,17 +125,7 @@ class CandidateVerificationSummaryRepository:
             """
 
             cursor.execute(
-
-                query,
-
-                (
-                    candidate_id,
-                    candidate_name,
-                    email,
-                    phone,
-                    status,
-                    risk_level
-                )
+                query, (candidate_id, candidate_name, email, phone, status, risk_level)
             )
 
         connection.commit()
@@ -102,15 +134,10 @@ class CandidateVerificationSummaryRepository:
 
         connection.close()
 
-        return {
-            "success": True
-        }
+        return {"success": True}
 
     @staticmethod
-    def get_candidate_summary(
-
-        candidate_id
-    ):
+    def get_candidate_summary(candidate_id):
 
         connection = get_connection()
 
@@ -122,10 +149,7 @@ class CandidateVerificationSummaryRepository:
         WHERE candidate_id = %s
         """
 
-        cursor.execute(
-            query,
-            (candidate_id,)
-        )
+        cursor.execute(query, (candidate_id,))
 
         result = cursor.fetchone()
 
@@ -134,7 +158,7 @@ class CandidateVerificationSummaryRepository:
         connection.close()
 
         return result
-    
+
     @staticmethod
     def get_pending_candidates(column_name):
 
@@ -172,7 +196,10 @@ class CandidateVerificationSummaryRepository:
 
         WHERE
 
-            c.status = 'DOCUMENTS_SUBMITTED'
+            c.status IN (
+                'DOCUMENTS_SUBMITTED',
+                'UNDER_VERIFICATION'
+            )
 
             AND (
 
@@ -196,7 +223,7 @@ class CandidateVerificationSummaryRepository:
         connection.close()
 
         return results
-    
+
     @staticmethod
     def get_module_statistics(column_name):
 
@@ -239,7 +266,10 @@ LEFT JOIN candidate_verification_summary cvs
 ON c.id = cvs.candidate_id
 
 WHERE
-    c.status = 'DOCUMENTS_SUBMITTED'
+    c.status IN (
+        'DOCUMENTS_SUBMITTED',
+        'UNDER_VERIFICATION'
+    )
     AND c.is_deleted = 0
         """
 
@@ -251,18 +281,14 @@ WHERE
         connection.close()
 
         return result
-    
+
     @staticmethod
-    def get_candidates_by_status(
-        column_name,
-        status
-    ):
+    def get_candidates_by_status(column_name, status):
 
         connection = get_connection()
         cursor = connection.cursor()
 
         if status == "PENDING_REVIEW":
-
             query = f"""
             SELECT
 
@@ -304,7 +330,10 @@ WHERE
                     cvs.{column_name} = 'PENDING_REVIEW'
                 )
 
-                AND c.status = 'DOCUMENTS_SUBMITTED'
+                AND c.status IN (
+                    'DOCUMENTS_SUBMITTED',
+                    'UNDER_VERIFICATION'
+                )
 
                 AND c.is_deleted = 0
             """
@@ -312,7 +341,6 @@ WHERE
             cursor.execute(query)
 
         else:
-
             query = f"""
             SELECT
 
@@ -350,10 +378,7 @@ WHERE
                 AND c.is_deleted = 0
             """
 
-            cursor.execute(
-                query,
-                (status,)
-            )
+            cursor.execute(query, (status,))
 
         results = cursor.fetchall()
 
@@ -361,7 +386,7 @@ WHERE
         connection.close()
 
         return results
-    
+
     @staticmethod
     def get_dashboard_summary():
 
@@ -440,12 +465,231 @@ WHERE
         cursor.close()
         connection.close()
 
+        # Safe parsing with defaults handles standard cursor index offsets safely
         return {
-            "total_candidates": result["total_candidates"] or 0,
-            "verified": result["verified"] or 0,
-            "pending": result["pending"] or 0,
-            "high_risk": result["high_risk"] or 0,
-            "medium_risk": result["medium_risk"] or 0,
-            "low_risk": result["low_risk"] or 0,
-            "completed_today": result["completed_today"] or 0,
+            "total_candidates": result[0] or 0,
+            "verified": result[1] or 0,
+            "completed_today": result[2] or 0,
+            "pending": result[3] or 0,
+            "high_risk": result[4] or 0,
+            "medium_risk": result[5] or 0,
+            "low_risk": result[6] or 0,
         }
+
+    @staticmethod
+    def get_overall_status(candidate_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        SELECT overall_status
+        FROM candidate_verification_summary
+        WHERE candidate_id = %s
+        """
+
+        cursor.execute(query, (candidate_id,))
+
+        result = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return result
+
+    @staticmethod
+    def get_case(candidate_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        SELECT *
+        FROM candidate_verification_summary
+        WHERE candidate_id = %s
+        """
+
+        cursor.execute(query, (candidate_id,))
+
+        result = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return result
+
+    @staticmethod
+    def approve_case(candidate_id, module):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        module_map = {
+            "Aadhaar Verification": "aadhaar_status",
+            "PAN Verification": "pan_status",
+            "Passport Verification": "passport_status",
+            "Face Match": "face_match_status",
+            "Resume Parsing": "resume_status",
+            "Education Verification": "education_status",
+            "Employment Verification": "employment_status",
+            "Credit Check": "credit_status",
+            "Court Records Check": "court_status",
+            "Watchlist Screening": "watchlist_status",
+            "Driving License Verification": "dl_status",
+            "Deepfake Detection": "deepfake_status",
+            "Salary Slip Verification": "salary_slip_status",
+        }
+
+        column = module_map.get(module)
+
+        if not column:
+            return False
+
+        query = f"""
+
+        UPDATE candidate_verification_summary
+
+        SET
+
+            {column} = 'VERIFIED',
+
+            updated_at = NOW()
+
+        WHERE
+
+            candidate_id = %s
+
+        """
+
+        cursor.execute(query, (candidate_id,))
+
+        connection.commit()
+
+        cursor.close()
+
+        connection.close()
+
+        return True
+
+    @staticmethod
+    def reject_case(candidate_id, module):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        module_map = {
+            "Aadhaar Verification": "aadhaar_status",
+            "PAN Verification": "pan_status",
+            "Passport Verification": "passport_status",
+            "Face Match": "face_match_status",
+            "Resume Parsing": "resume_status",
+            "Education Verification": "education_status",
+            "Employment Verification": "employment_status",
+            "Credit Check": "credit_status",
+            "Court Records Check": "court_status",
+            "Watchlist Screening": "watchlist_status",
+            "Driving License Verification": "dl_status",
+            "Deepfake Detection": "deepfake_status",
+            "Salary Slip Verification": "salary_slip_status",
+        }
+
+        column = module_map.get(module)
+
+        if not column:
+            return False
+
+        query = f"""
+
+        UPDATE candidate_verification_summary
+
+
+        SET
+
+
+            {column}='REJECTED',
+
+
+            updated_at=NOW()
+
+
+        WHERE
+
+
+            candidate_id=%s
+
+
+        """
+
+        cursor.execute(query, (candidate_id,))
+
+        connection.commit()
+
+        cursor.close()
+
+        connection.close()
+
+        return True
+
+    @staticmethod
+    def request_reverification(candidate_id, module):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        module_map = {
+            "Aadhaar Verification": "aadhaar_status",
+            "PAN Verification": "pan_status",
+            "Passport Verification": "passport_status",
+            "Face Match": "face_match_status",
+            "Resume Parsing": "resume_status",
+            "Education Verification": "education_status",
+            "Employment Verification": "employment_status",
+            "Credit Check": "credit_status",
+            "Court Records Check": "court_status",
+            "Watchlist Screening": "watchlist_status",
+            "Driving License Verification": "dl_status",
+            "Deepfake Detection": "deepfake_status",
+            "Salary Slip Verification": "salary_slip_status",
+        }
+
+        column = module_map.get(module)
+
+        if not column:
+            return False
+
+        query = f"""
+
+        UPDATE candidate_verification_summary
+
+
+        SET
+
+
+            {column}='PENDING_REVIEW',
+
+
+            updated_at=NOW()
+
+
+        WHERE
+
+
+            candidate_id=%s
+
+
+        """
+
+        cursor.execute(query, (candidate_id,))
+
+        connection.commit()
+
+        cursor.close()
+
+        connection.close()
+
+        return True

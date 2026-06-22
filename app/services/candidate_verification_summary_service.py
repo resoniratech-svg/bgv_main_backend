@@ -54,6 +54,8 @@ class CandidateVerificationSummaryService:
 
             "Employment":
                 "employment_status",
+            
+            "Salary Slip": "salary_slip_status",
 
             "Credit Bureau":
                 "credit_status",
@@ -78,7 +80,7 @@ class CandidateVerificationSummaryService:
                 "message": "Invalid module"
             }
 
-        return (
+        result = (
             CandidateVerificationSummaryRepository
             .create_or_update_module_status(
 
@@ -104,6 +106,77 @@ class CandidateVerificationSummaryService:
                 risk_level
             )
         )
+
+        # =====================================
+        # MOVE CANDIDATE TO UNDER_VERIFICATION
+        # WHEN ANY MODULE IS PROCESSED
+        # =====================================
+
+        if status in [
+            "Verified",
+            "Not Verified",
+            "Fraud",
+            "Rejected"
+        ]:
+
+            CandidateRepository.update_candidate_status(
+                candidate_id,
+                {
+                    "status":
+                        "UNDER_VERIFICATION"
+                }
+            )
+
+        # =====================================
+        # CHECK OVERALL STATUS
+        # =====================================
+
+        summary = (
+            CandidateVerificationSummaryRepository
+            .get_candidate_summary(
+                candidate_id
+            )
+        )
+
+        if summary:
+
+            overall_status = (
+                summary.get(
+                    "overall_status"
+                )
+            )
+
+            if overall_status == "VERIFIED":
+
+                CandidateRepository.update_candidate_status(
+                    candidate_id,
+                    {
+                        "status":
+                            "VERIFIED"
+                    }
+                )
+
+            elif overall_status == "FRAUD":
+
+                CandidateRepository.update_candidate_status(
+                    candidate_id,
+                    {
+                        "status":
+                            "FRAUD_ALERT"
+                    }
+                )
+
+            elif overall_status == "NOT_VERIFIED":
+
+                CandidateRepository.update_candidate_status(
+                    candidate_id,
+                    {
+                        "status":
+                            "NOT_VERIFIED"
+                    }
+                )
+
+        return result
 
     @staticmethod
     def get_candidate_summary(

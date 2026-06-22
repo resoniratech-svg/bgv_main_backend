@@ -2,10 +2,20 @@ from app.models.bgv_request import BGVRequest
 from app.models.fraud_check import FraudCheck
 from app.models.risk_flag import RiskFlag
 from app.utils.exceptions import FraudException
-
+from app.repositories.report_repository import (
+    ReportRepository
+)
 
 class ReportService:
+    @staticmethod
+    def get_all_reports():
 
+        reports = (
+            ReportRepository
+            .get_all_reports()
+        )
+
+        return reports
     @staticmethod
     def generate_report(bgv_id):
 

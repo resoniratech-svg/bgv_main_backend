@@ -8,8 +8,7 @@ class BGVService:
 
         required_fields = [
             "candidate_id",
-            "company_name",
-            "package_name"
+            "company_name"
         ]
 
         for field in required_fields:

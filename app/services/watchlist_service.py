@@ -17,12 +17,23 @@ class WatchlistService:
                 "success": False,
                 "message": "Candidate not found"
             }
+        print("CANDIDATE OBJECT")
+        print(candidate)
+
+        print("FULL NAME TYPE")
+        print(type(candidate["full_name"]))
+        dob = None
+
+        if candidate.get("dob"):
+            dob = candidate["dob"].strftime("%d/%m/%Y")
 
         return AIServiceConnector.screen_watchlist(
             candidate_id=candidate["id"],
             full_name=candidate["full_name"],
-            country="India"
+            dob=dob,
+            gender=candidate.get("gender")
         )
+
     
     @staticmethod
     def get_candidate_result(candidate_id):

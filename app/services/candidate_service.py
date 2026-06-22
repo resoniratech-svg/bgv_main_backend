@@ -1,4 +1,10 @@
-from app.repositories.candidate_repository import CandidateRepository
+from app.repositories.candidate_repository import (
+    CandidateRepository
+)
+
+from app.repositories.bgv_repository import (
+    BGVRepository
+)
 
 
 class CandidateService:
@@ -9,7 +15,9 @@ class CandidateService:
         required_fields = [
             "first_name",
             "email",
-            "phone"
+            "phone",
+            "country",
+            "company_name"
         ]
 
         for field in required_fields:
@@ -21,12 +29,27 @@ class CandidateService:
                     "message": f"{field} is required"
                 }
 
-        result = CandidateRepository.create_candidate(data)
+        candidate_result = (
+            CandidateRepository.create_candidate(data)
+        )
+
+        bgv_result = (
+            BGVRepository.create_bgv_request({
+                "candidate_id":
+                    candidate_result["candidate_id"],
+
+                "company_name":
+                    data.get("company_name")
+            })
+        )
 
         return {
             "status": "success",
             "message": "Candidate created successfully",
-            "data": result
+            "data": {
+                "candidate": candidate_result,
+                "bgv": bgv_result
+            }
         }
 
     @staticmethod

@@ -2,24 +2,23 @@ from flask import Flask
 from flask_cors import CORS
 from app.routes.fraud_routes import fraud_bp
 from sqlalchemy import text
-from app.routes.candidate_verification_summary_routes import (
-    verification_summary_bp
-)
+from app.routes.salary_slip_routes import salary_slip_bp
+from app.routes.candidate_verification_summary_routes import verification_summary_bp
+
 # from app.routes.verification_summary_routes import (
 #     verification_summary_bp
 # )
 from config import Config
 from app.extensions import db, jwt, bcrypt, migrate, limiter
 from app.routes.candidate_routes import candidate_bp
+
 # ==============================
 # Blueprints
 # ==============================
 from app.routes.auth_routes import auth_bp
 from app.routes.user_routes import user_bp
 from app.routes.verification_type_routes import verification_type_bp
-from app.routes.candidate_verification_summary_routes import (
-    verification_summary_bp
-)
+from app.routes.candidate_verification_summary_routes import verification_summary_bp
 from app.routes.dashboard_routes import dashboard_bp
 from app.routes.report_routes import report_bp
 from app.routes.compliance_routes import compliance_bp
@@ -40,30 +39,21 @@ from app.routes.bgv_routes import bgv_bp
 from app.routes.candidate_link_routes import candidate_link_bp
 from app.routes.document_routes import document_bp
 from app.routes.health_routes import health_bp
-from app.routes.pdf_report_routes import (
-    pdf_report_bp
-)
-from app.routes.didit_routes import (
-    didit_bp
-)
-# ==============================
+from app.routes.pdf_report_routes import pdf_report_bp
+from app.routes.didit_routes import didit_bp
+
+from app.routes.audit_routes import audit_bp  # ==============================
+
 # Utils
 # ==============================
 from app.utils.error_handler import register_error_handlers
 from app.utils.logger import setup_logger
-from app.routes.submission_routes import (
-    submission_bp
-)
+from app.routes.submission_routes import submission_bp
+
 # ==============================
 # Import Models
 # ==============================
-from app.models import (
-    User,
-    BGVRequest,
-    VerificationResult,
-    VerificationType,
-    AuditLog
-)
+from app.models import User, BGVRequest, VerificationResult, VerificationType, AuditLog
 
 
 def create_app():
@@ -77,9 +67,7 @@ def create_app():
     # ==============================
     @app.route("/")
     def home():
-        return {
-            "message": "BGV Service Running Successfully"
-        }
+        return {"message": "BGV Service Running Successfully"}
 
     # ==============================
     # Load Config
@@ -89,15 +77,12 @@ def create_app():
     # ==============================
     # Enable CORS
     # ==============================
-    CORS(
-        app,
-        resources={
-            r"/api/*": {
-                "origins": "*"
-            }
-        }
-    )
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+    # ==============================
+    # salary_slip_bp
+    # ==============================
+    app.register_blueprint(salary_slip_bp, url_prefix="/api/v1")
     # ==============================
     # Initialize Extensions
     # ==============================
@@ -112,102 +97,41 @@ def create_app():
     # ==============================
 
     # Authentication APIs
-    app.register_blueprint(
-        auth_bp,
-        url_prefix="/api/v1/auth"
-    )
-    app.register_blueprint(
-        user_bp,
-        url_prefix="/api/v1/users"
-    )
+    app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
+    app.register_blueprint(user_bp, url_prefix="/api/v1/users")
     # BGV APIs
-    app.register_blueprint(
-        bgv_bp,
-        url_prefix="/api/v1/bgv"
-    )
+    app.register_blueprint(bgv_bp, url_prefix="/api/v1/bgv")
 
     # Verification Type APIs
     app.register_blueprint(
-        verification_type_bp,
-        url_prefix="/api/v1/verification-types"
+        verification_type_bp, url_prefix="/api/v1/verification-types"
     )
 
-    
     # Dashboard APIs
-    app.register_blueprint(
-        dashboard_bp,
-        url_prefix="/api/v1/dashboard"
-    )
+    app.register_blueprint(dashboard_bp, url_prefix="/api/v1/dashboard")
     # fraud center
-    app.register_blueprint(
-        fraud_bp,
-        url_prefix="/api/v1/fraud"
-    )
+    app.register_blueprint(fraud_bp, url_prefix="/api/v1/fraud")
 
     # Report APIs
-    app.register_blueprint(
-        report_bp,
-        url_prefix="/api/v1/report"
-    )
+    app.register_blueprint(report_bp, url_prefix="/api/v1/report")
 
     # Compliance APIs
-    app.register_blueprint(
-        compliance_bp,
-        url_prefix="/api/v1/compliance"
-    )
-    app.register_blueprint(
-        passport_bp,
-        url_prefix="/api/v1/passport"
-    )
-    app.register_blueprint(
-        court_bp,
-        url_prefix="/api/v1/court"
-    )
-    
-    app.register_blueprint(
-        din_bp,
-        url_prefix="/api/v1/din"
-    )
-    app.register_blueprint(
-        global_database_bp,
-        url_prefix="/api/v1/global_database"
-    )
-    app.register_blueprint(
-        reference_bp,
-        url_prefix="/api/v1/reference"
-    )
-    app.register_blueprint(
-        credit_check_bp,
-        url_prefix="/api/v1/credit_check"
-    )
-    app.register_blueprint(
-        candidate_bp,
-        url_prefix="/api/v1"
-    )
-    app.register_blueprint(
-        candidate_link_bp,
-        url_prefix="/api/v1"
-    )
-    app.register_blueprint(
-        document_bp,
-        url_prefix="/api/v1"
-    )
-    app.register_blueprint(
-        submission_bp,
-        url_prefix="/api/v1"
-    )
-    app.register_blueprint(
-        health_bp,
-        url_prefix="/api/v1"
-    )
-    app.register_blueprint(
-        pdf_report_bp,
-        url_prefix="/api/v1"
-    )
-    app.register_blueprint(
-        didit_bp,
-        url_prefix="/api/v1"
-    )
+    app.register_blueprint(compliance_bp, url_prefix="/api/v1/compliance")
+    app.register_blueprint(passport_bp, url_prefix="/api/v1/passport")
+    app.register_blueprint(court_bp, url_prefix="/api/v1/court")
+
+    app.register_blueprint(din_bp, url_prefix="/api/v1/din")
+    app.register_blueprint(global_database_bp, url_prefix="/api/v1/global_database")
+    app.register_blueprint(reference_bp, url_prefix="/api/v1/reference")
+    app.register_blueprint(credit_check_bp, url_prefix="/api/v1/credit_check")
+    app.register_blueprint(candidate_bp, url_prefix="/api/v1")
+    app.register_blueprint(candidate_link_bp, url_prefix="/api/v1")
+    app.register_blueprint(document_bp, url_prefix="/api/v1")
+    app.register_blueprint(submission_bp, url_prefix="/api/v1")
+    app.register_blueprint(health_bp, url_prefix="/api/v1")
+    app.register_blueprint(pdf_report_bp, url_prefix="/api/v1")
+    app.register_blueprint(didit_bp, url_prefix="/api/v1")
+    app.register_blueprint(audit_bp, url_prefix="/api/v1/audit")
     app.register_blueprint(aadhaar_bp, url_prefix="/api/v1/aadhaar")
     app.register_blueprint(pan_bp, url_prefix="/api/v1/pan")
     app.register_blueprint(employment_bp, url_prefix="/api/v1/employment")
@@ -219,9 +143,8 @@ def create_app():
     # verification summary
     # ==============================
     app.register_blueprint(
-    verification_summary_bp,
-    url_prefix="/api/v1/verification-summary"
-)
+        verification_summary_bp, url_prefix="/api/v1/verification-summary"
+    )
 
     # ==============================
     # Logger

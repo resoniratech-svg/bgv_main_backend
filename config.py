@@ -3,7 +3,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from flask import current_app
 load_dotenv()
-
+AI_SERVICE_URL = "http://localhost:5001"
 # ==========================================
 # BASE CONFIG
 # ==========================================

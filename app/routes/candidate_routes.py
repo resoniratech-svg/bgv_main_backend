@@ -188,6 +188,9 @@ def delete_candidate(candidate_id):
 
     except Exception as e:
 
+        import traceback
+        traceback.print_exc()
+
         return jsonify({
             "status": "error",
             "message": str(e)
