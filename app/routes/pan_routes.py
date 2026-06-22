@@ -1,23 +1,47 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt
 from app.services.pan_service import PanService
 
 pan_bp = Blueprint("pan", __name__)
 
-@pan_bp.route("/", methods=["GET"])
-def health():
-    return jsonify({
-        "status": "success",
-        "message": "Pan module health"
-    }), 200
-
 
 @pan_bp.route("/verify", methods=["POST"])
-@jwt_required(optional=True)
-def verify():
+@jwt_required()
+def verify_pan():
+    try:
+        data = request.get_json()
+        token = request.headers.get("Authorization")
 
-    data = request.get_json() or {}
+        result = PanService.verify_pan(data=data, token=token)
 
-    return jsonify(
-        PanService.verify(data)
-    ), 200
+        if result.get("status") == "error":
+            return jsonify(result), 400
+
+        return jsonify(result), 200
+
+    except Exception as error:
+        return jsonify({
+            "status": "error",
+            "message": str(error)
+        }), 500
+
+
+@pan_bp.route("/result/<int:candidate_id>", methods=["GET"])
+@jwt_required()
+def get_pan_result(candidate_id):
+    try:
+        token = request.headers.get("Authorization")
+
+        # Fixed: Changed PANService to PanService to match the import statement
+        result = PanService.get_result(candidate_id, token)
+
+        return jsonify({
+            "status": "success",
+            "data": result
+        }), 200
+
+    except Exception as error:
+        return jsonify({
+            "status": "error",
+            "message": str(error)
+        }), 500

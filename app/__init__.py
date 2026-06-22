@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, app
 from flask_cors import CORS
 from app.routes.fraud_routes import fraud_bp
 from sqlalchemy import text
@@ -39,10 +39,18 @@ from app.routes.bgv_routes import bgv_bp
 from app.routes.candidate_link_routes import candidate_link_bp
 from app.routes.document_routes import document_bp
 from app.routes.health_routes import health_bp
+
 from app.routes.pdf_report_routes import pdf_report_bp
 from app.routes.didit_routes import didit_bp
 
 from app.routes.audit_routes import audit_bp  # ==============================
+
+from app.routes.pdf_report_routes import pdf_report_bp
+from app.routes.didit_routes import didit_bp
+
+from app.routes.driving_license_routes import driving_license_bp
+
+# ==============================
 
 # Utils
 # ==============================
@@ -131,7 +139,9 @@ def create_app():
     app.register_blueprint(health_bp, url_prefix="/api/v1")
     app.register_blueprint(pdf_report_bp, url_prefix="/api/v1")
     app.register_blueprint(didit_bp, url_prefix="/api/v1")
-    app.register_blueprint(audit_bp, url_prefix="/api/v1/audit")
+
+    app.register_blueprint(driving_license_bp, url_prefix="/api/v1/driving-license")
+
     app.register_blueprint(aadhaar_bp, url_prefix="/api/v1/aadhaar")
     app.register_blueprint(pan_bp, url_prefix="/api/v1/pan")
     app.register_blueprint(employment_bp, url_prefix="/api/v1/employment")
