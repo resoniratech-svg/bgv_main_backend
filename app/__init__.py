@@ -114,7 +114,8 @@ def create_app():
     app.register_blueprint(
         verification_type_bp, url_prefix="/api/v1/verification-types"
     )
-
+    # Audit APIs
+    app.register_blueprint(audit_bp, url_prefix="/api/v1")
     # Dashboard APIs
     app.register_blueprint(dashboard_bp, url_prefix="/api/v1/dashboard")
     # fraud center
