@@ -42,6 +42,13 @@ from app.routes.driving_license_routes import (
     driving_license_bp
 )
 
+from app.routes.deepfake_routes import (
+
+    deepfake_bp
+
+)
+
+
 # ==============================
 # Utils
 # ==============================
@@ -201,15 +208,29 @@ def create_app():
     driving_license_bp,
     url_prefix="/api/v1/driving-license"
 )
+    app.register_blueprint(
+
+    face_match_bp,
+
+    url_prefix="/api/v1"
+
+)
 
     app.register_blueprint(aadhaar_bp, url_prefix="/api/v1/aadhaar")
     app.register_blueprint(pan_bp, url_prefix="/api/v1/pan")
     app.register_blueprint(employment_bp, url_prefix="/api/v1/employment")
     app.register_blueprint(education_bp, url_prefix="/api/v1/education")
-    app.register_blueprint(face_match_bp, url_prefix="/api/v1/face_match")
+    
     app.register_blueprint(ocr_bp, url_prefix="/api/v1")
     app.register_blueprint(resume_bp, url_prefix="/api/v1/resume")
+    
+    app.register_blueprint(
 
+    deepfake_bp,
+
+    url_prefix="/api/v1/deepfake"
+
+)
     # ==============================
     # Logger
     # ==============================
