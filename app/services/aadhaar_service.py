@@ -1,5 +1,5 @@
 from app.services.ai_service_connector import AIServiceConnector
-
+from app.repositories.candidate_repository import CandidateRepository
 
 class AadhaarService:
 
@@ -26,10 +26,47 @@ class AadhaarService:
         )
 
     @staticmethod
-    def verify_aadhaar(candidate_id, bgv_id, document_id, token):
-        return AIServiceConnector.verify_aadhaar(
-            candidate_id=candidate_id,
-            bgv_id=bgv_id,
-            document_id=document_id,
-            token=token
+    def verify_aadhaar(
+
+        candidate_id,
+
+        bgv_id,
+
+        document_id,
+
+        token
+
+    ):
+
+        result = (
+
+            AIServiceConnector
+
+            .verify_aadhaar(
+
+                candidate_id,
+
+                bgv_id,
+
+                document_id,
+
+                token
+
+            )
+
         )
+
+        if result.get("success"):
+
+            CandidateRepository.update_candidate_profile(
+
+                candidate_id=candidate_id,
+
+                date_of_birth=result.get("date_of_birth"),
+
+                gender=result.get("gender")
+
+            )
+
+        return result
+    

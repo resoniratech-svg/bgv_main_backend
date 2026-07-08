@@ -15,12 +15,20 @@ driving_license_bp = Blueprint(
     "driving_license",
 
     __name__
+
 )
 
 
+# =====================================================
+# VERIFY DRIVING LICENSE
+# =====================================================
+
 @driving_license_bp.route(
+
     "/verify",
+
     methods=["POST"]
+
 )
 @jwt_required()
 def verify_driving_license():
@@ -49,24 +57,78 @@ def verify_driving_license():
             "Authorization"
         )
 
+        ########################################
+        # VALIDATIONS
+        ########################################
+
+        if not candidate_id:
+
+            return jsonify({
+
+                "status": "error",
+
+                "message": "candidate_id is required"
+
+            }), 400
+
+        if not bgv_id:
+
+            return jsonify({
+
+                "status": "error",
+
+                "message": "bgv_id is required"
+
+            }), 400
+
+        if not front_document_id:
+
+            return jsonify({
+
+                "status": "error",
+
+                "message": "front_document_id is required"
+
+            }), 400
+
+        if not back_document_id:
+
+            return jsonify({
+
+                "status": "error",
+
+                "message": "back_document_id is required"
+
+            }), 400
+
+        ########################################
+        # VERIFY
+        ########################################
+
         result = (
 
             DrivingLicenseService
+
             .verify_driving_license(
 
                 candidate_id=
+
                 candidate_id,
 
                 bgv_id=
+
                 bgv_id,
 
                 front_document_id=
+
                 front_document_id,
 
                 back_document_id=
+
                 back_document_id,
 
                 token=
+
                 token
 
             )
@@ -74,16 +136,74 @@ def verify_driving_license():
         )
 
         return jsonify(
+
             result
+
         )
 
-    except Exception as error:
+    except Exception as e:
 
         return jsonify({
 
             "status": "error",
 
-            "message":
-            str(error)
+            "message": str(e)
+
+        }), 500
+
+
+# =====================================================
+# GET RESULT
+# =====================================================
+
+@driving_license_bp.route(
+
+    "/result/<int:candidate_id>",
+
+    methods=["GET"]
+
+)
+@jwt_required()
+def get_result(
+
+    candidate_id
+
+):
+
+    try:
+
+        token = request.headers.get(
+
+            "Authorization"
+
+        )
+
+        result = (
+
+            DrivingLicenseService
+
+            .get_result(
+
+                candidate_id,
+
+                token
+
+            )
+
+        )
+
+        return jsonify(
+
+            result
+
+        )
+
+    except Exception as e:
+
+        return jsonify({
+
+            "status": "error",
+
+            "message": str(e)
 
         }), 500
