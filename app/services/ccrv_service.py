@@ -3,14 +3,17 @@ from app.services.ai_service_connector import (
 )
 
 
-class PassportService:
+class CCRVService:
+
+    # ==========================================
+    # VERIFY CCRV
+    # ==========================================
 
     @staticmethod
-    def verify_passport(
+    def verify_ccrv(
 
         candidate_id,
         bgv_id,
-        document_id,
         token
 
     ):
@@ -18,16 +21,13 @@ class PassportService:
         return (
 
             AIServiceConnector
-            .verify_passport(
+            .verify_ccrv(
 
                 candidate_id=
                 candidate_id,
 
                 bgv_id=
                 bgv_id,
-
-                document_id=
-                document_id,
 
                 token=
                 token
@@ -36,16 +36,27 @@ class PassportService:
 
         )
 
+    # ==========================================
+    # GET CCRV RESULT
+    # ==========================================
+
     @staticmethod
-    def get_result(candidate_id, token):
+    def get_result(
+
+        candidate_id,
+        token
+
+    ):
 
         return (
 
             AIServiceConnector
-            .get_passport_result(
+            .get_ccrv_result(
 
+                candidate_id=
                 candidate_id,
 
+                token=
                 token
 
             )

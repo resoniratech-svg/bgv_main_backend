@@ -3,46 +3,73 @@ from app.services.ai_service_connector import (
 )
 
 
-class PassportService:
+class DeepfakeService:
+
 
     @staticmethod
-    def verify_passport(
+    def verify_deepfake(
 
-        candidate_id,
-        bgv_id,
-        document_id,
-        token
+            candidate_id,
+
+            bgv_id,
+
+            document_id,
+
+            token
 
     ):
 
-        return (
+
+        response = (
 
             AIServiceConnector
-            .verify_passport(
+
+            .verify_deepfake(
 
                 candidate_id=
+
                 candidate_id,
+
 
                 bgv_id=
+
                 bgv_id,
 
+
                 document_id=
+
                 document_id,
 
+
                 token=
+
                 token
 
             )
 
         )
 
-    @staticmethod
-    def get_result(candidate_id, token):
 
-        return (
+        return response
+
+
+
+    @staticmethod
+    def get_result(
+
+            candidate_id,
+
+            token
+
+    ):
+
+
+
+        response = (
 
             AIServiceConnector
-            .get_passport_result(
+
+            .get_deepfake_result(
 
                 candidate_id,
 
@@ -51,3 +78,7 @@ class PassportService:
             )
 
         )
+
+
+        return response
+

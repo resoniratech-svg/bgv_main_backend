@@ -1,16 +1,14 @@
-from app.database.connection import get_connection
 import uuid
-
+from app.database.connection import get_connection
 
 class CandidateRepository:
 
     @staticmethod
-    def create_candidate(data):
-
+    def create_candidate(data: dict) -> dict:
         connection = get_connection()
-
         cursor = connection.cursor()
-
+        
+        # Generate a short, upper-case unique code
         candidate_code = f"CAND-{uuid.uuid4().hex[:8].upper()}"
 
         query = """
@@ -34,16 +32,42 @@ class CandidateRepository:
             "PENDING"
         )
 
-        cursor.execute(query, values)
+        try:
+            cursor.execute(query, values)
+            connection.commit()
+            candidate_id = cursor.lastrowid
+            
+            return {
+                "candidate_id": candidate_id,
+                "candidate_code": candidate_code
+            }
+        except Exception as e:
+            connection.rollback()
+            raise e
+        finally:
+            cursor.close()
+            connection.close()
 
-        connection.commit()
+    @staticmethod
+    def update_candidate_profile(candidate_id: int, date_of_birth: str, gender: str) -> bool:
+        connection = get_connection()
+        cursor = connection.cursor()
 
-        candidate_id = cursor.lastrowid
+        query = """
+        UPDATE candidates
+        SET
+            date_of_birth = %s,
+            gender = %s
+        WHERE id = %s
+        """
 
-        cursor.close()
-        connection.close()
-
-        return {
-            "candidate_id": candidate_id,
-            "candidate_code": candidate_code
-        }
+        try:
+            cursor.execute(query, (date_of_birth, gender, candidate_id))
+            connection.commit()
+            return cursor.rowcount > 0  # Returns True if a row was actually updated
+        except Exception as e:
+            connection.rollback()
+            raise e
+        finally:
+            cursor.close()
+            connection.close()

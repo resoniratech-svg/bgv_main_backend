@@ -39,3 +39,24 @@ class DrivingLicenseService:
             )
 
         )
+
+    @staticmethod
+    def get_result(
+
+        candidate_id,
+        token
+
+    ):
+
+        return (
+
+            AIServiceConnector
+            .get_driving_license_result(
+
+                candidate_id,
+
+                token
+
+            )
+
+        )

@@ -1,50 +1,78 @@
 from app.services.ai_service_connector import (
+
     AIServiceConnector
+
 )
 
 
-class PassportService:
+
+class FaceMatchVerificationService:
+
+
 
     @staticmethod
-    def verify_passport(
+    def verify(
 
-        candidate_id,
-        bgv_id,
-        document_id,
-        token
+            candidate_id,
+
+            bgv_id,
+
+            document_id,
+
+            token
 
     ):
 
+
+
         return (
 
-            AIServiceConnector
-            .verify_passport(
 
-                candidate_id=
+            AIServiceConnector
+
+
+            .verify_face_match(
+
+
                 candidate_id,
 
-                bgv_id=
+
                 bgv_id,
 
-                document_id=
+
                 document_id,
 
-                token=
+
                 token
 
             )
 
         )
 
+
+
     @staticmethod
-    def get_result(candidate_id, token):
+    def get_result(
+
+            candidate_id,
+
+            token
+
+    ):
+
+
 
         return (
 
+
             AIServiceConnector
-            .get_passport_result(
+
+
+            .get_face_match_result(
+
 
                 candidate_id,
+
 
                 token
 

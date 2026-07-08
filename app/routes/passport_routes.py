@@ -73,3 +73,36 @@ def verify_passport():
             str(error)
 
         }), 500
+    
+@passport_bp.route(
+    "/result/<int:candidate_id>",
+    methods=["GET"]
+)
+@jwt_required()
+def get_passport_result(candidate_id):
+
+        try:
+
+            token = request.headers.get(
+                "Authorization"
+            )
+
+            result = (
+                PassportService
+                .get_result(
+                    candidate_id,
+                    token
+                )
+            )
+
+            return jsonify(result)
+
+        except Exception as e:
+
+            return jsonify({
+
+                "status": "error",
+
+                "message": str(e)
+
+            }), 500
