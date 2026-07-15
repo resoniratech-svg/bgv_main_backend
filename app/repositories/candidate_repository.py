@@ -71,3 +71,60 @@ class CandidateRepository:
         finally:
             cursor.close()
             connection.close()
+
+    @staticmethod
+    def get_candidate_by_id(candidate_id: int) -> dict | None:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            id,
+            candidate_code,
+            first_name,
+            last_name,
+            email,
+            phone,
+            date_of_birth,
+            gender,
+            status
+        FROM candidates
+        WHERE id = %s
+        """
+
+        try:
+            cursor.execute(query, (candidate_id,))
+            result = cursor.fetchone()
+            return result
+        except Exception as e:
+            raise e
+        finally:
+            cursor.close()
+            connection.close()
+
+    @staticmethod
+    def get_candidate_mobile(candidate_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            SELECT phone
+            FROM candidates
+            WHERE id=%s
+            """,
+            (candidate_id,)
+        )
+
+        result = cursor.fetchone()
+
+        cursor.close()
+
+        connection.close()
+
+        if not result:
+            return None
+
+        return result["phone"]

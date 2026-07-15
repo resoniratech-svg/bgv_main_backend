@@ -167,12 +167,7 @@ class AIServiceConnector:
     
     @staticmethod
     def get_passport_result(candidate_id, token):
-
-        url = (
-            f"{AI_SERVICE_BASE_URL}"
-            f"/passport/result/{candidate_id}"
-        )
-
+        url = f"{AI_SERVICE_BASE_URL}/passport/result/{candidate_id}"
         headers = {
             "Authorization": token
         }
@@ -181,7 +176,6 @@ class AIServiceConnector:
             url,
             headers=headers
         )
-
         return response.json()
 
     @staticmethod
@@ -206,36 +200,16 @@ class AIServiceConnector:
         return response.json()
     
     @staticmethod
-    def get_driving_license_result(
-
-        candidate_id,
-
-        token
-
-    ):
-
-        url = (
-
-            f"{AI_SERVICE_BASE_URL}"
-
-            f"/driving-license/result/{candidate_id}"
-
-        )
-
+    def get_driving_license_result(candidate_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/driving-license/result/{candidate_id}"
         headers = {
-
             "Authorization": token
-
         }
 
         response = requests.get(
-
             url,
-
             headers=headers
-
         )
-
         return response.json()
 
     ########################################
@@ -262,7 +236,7 @@ class AIServiceConnector:
         return response.json()
 
     ########################################
-    # GET RESULT
+    # GET DEEPFAKE RESULT
     ########################################
     @staticmethod
     def get_deepfake_result(candidate_id, token):
@@ -276,259 +250,316 @@ class AIServiceConnector:
             headers=headers
         )
         return response.json()
+
+    ########################################
+    # VERIFY FACE MATCH
+    ########################################
+    @staticmethod
+    def verify_face_match(candidate_id, bgv_id, document_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/face-match/verify"
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id,
+            "document_id": document_id
+        }
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload
+        )
+        return response.json()
+
+    ########################################
+    # GET FACE MATCH RESULT
+    ########################################
+    @staticmethod
+    def get_face_match_result(candidate_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/face-match/result/{candidate_id}"
+        headers = {
+            "Authorization": token
+        }
+
+        response = requests.get(
+            url,
+            headers=headers
+        )
+        return response.json()
+
+    ########################################
+    # VERIFY CCRV
+    ########################################
+    @staticmethod
+    def verify_ccrv(candidate_id, bgv_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/ccrv/verify"
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id
+        }
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload
+        )
+        return response.json()
+
+    ########################################
+    # GET CCRV RESULT
+    ########################################
+    @staticmethod
+    def get_ccrv_result(candidate_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/ccrv/result/{candidate_id}"
+        headers = {
+            "Authorization": token
+        }
+
+        response = requests.get(
+            url,
+            headers=headers
+        )
+        return response.json()
+
+    ########################################
+    # SAVE CANDIDATE CONSENT
+    ########################################
+    @staticmethod
+    def save_candidate_consent(
+        candidate_id,
+        bgv_id,
+        verification_type,
+        consent_status,
+        consent_text,
+        consent_version,
+        consent_source,
+        token
+    ):
+        url = f"{AI_SERVICE_BASE_URL}/candidate-consent"
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id,
+            "verification_type": verification_type,
+            "consent_status": consent_status,
+            "consent_text": consent_text,
+            "consent_version": consent_version,
+            "consent_source": consent_source
+        }
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload
+        )
+        return response.json()
+
+    ########################################
+    # GET CANDIDATE CONSENT
+    ########################################
+    @staticmethod
+    def get_candidate_consent(candidate_id, bgv_id, verification_type, token):
+        url = f"{AI_SERVICE_BASE_URL}/candidate-consent/{candidate_id}"
+        headers = {
+            "Authorization": token
+        }
+        params = {
+            "bgv_id": bgv_id,
+            "verification_type": verification_type
+        }
+
+        response = requests.get(
+            url,
+            headers=headers,
+            params=params
+        )
+        return response.json()
+        
+    ########################################
+    # CREDIT BUREAU VERIFICATION
+    ########################################
+    @staticmethod
+    def verify_credit_bureau(candidate_id, bgv_id, first_name, last_name, phone, token):
+        url = f"{AI_SERVICE_BASE_URL}/credit-bureau/verify"
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id,
+            "first_name": first_name,
+            "last_name": last_name,
+            "phone": phone
+        }
+
+        print("=" * 80)
+        print("AI CONNECTOR PAYLOAD")
+        print(payload)
+        print("=" * 80)
+        print("URL =", url)
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=180
+        )
+
+        print("=" * 80)
+        print("AI SERVICE STATUS :", response.status_code)
+        print("AI SERVICE HEADERS :", response.headers)
+        print("AI SERVICE TEXT :")
+        print(response.text)
+        print("=" * 80)
+
+        try:
+            body = response.json()
+        except Exception:
+            raise Exception(
+                f"AI Service returned invalid response.\n"
+                f"Status : {response.status_code}\n"
+                f"Body : {response.text}"
+            )
+
+        if response.status_code != 200:
+            return body
+
+        return body
+
+    ########################################
+    # CREDIT BUREAU RESULT
+    ########################################
+    @staticmethod
+    def get_credit_bureau_result(candidate_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/credit-bureau/result/{candidate_id}"
+        headers = {
+            "Authorization": token
+        }
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=120
+        )
+
+        print("=" * 80)
+        print("CREDIT BUREAU RESULT RESPONSE")
+        print(response.status_code)
+        print(response.text)
+        print("=" * 80)
+
+        return response.json()
+
+    ########################################
+    # SALARY SLIP OCR
+    ########################################
+    @staticmethod
+    def verify_salary_slip(candidate_id, bgv_id, document_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/api/v1/salary-slip/ocr"
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id,
+            "document_id": document_id
+        }
+
+        print("=" * 80)
+        print("SALARY SLIP OCR REQUEST")
+        print(payload)
+        print("=" * 80)
+        print("URL =", url)
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=180
+        )
+
+        print("=" * 80)
+        print("SALARY SLIP OCR RESPONSE")
+        print(response.status_code)
+        print(response.text)
+        print("=" * 80)
+
+        response.raise_for_status()
+        return response.json()
+
+    ########################################
+    # GET SALARY SLIP OCR RESULT
+    ########################################
+    @staticmethod
+    def get_salary_slip_result(candidate_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/api/v1/salary-slip/result/{candidate_id}"
+        headers = {
+            "Authorization": token
+        }
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=120
+        )
+
+        print("=" * 80)
+        print("SALARY SLIP RESULT")
+        print(response.status_code)
+        print(response.text)
+        print("=" * 80)
+
+        response.raise_for_status()
+        return response.json()
+
+    # =====================================================
+    # VERIFY EMPLOYMENT
+    # =====================================================
+    @staticmethod
+    def verify_employment(candidate_id, bgv_id, mobile_number, token):
+        url = f"{AI_SERVICE_BASE_URL}/employment/verify"
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id,
+            "mobile_number": mobile_number
+        }
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload
+        )
+        return response.json()
+
+    # =====================================================
+    # GET EMPLOYMENT RESULT
+    # =====================================================
+    @staticmethod
+    def get_employment_result(candidate_id, token):
+        url = f"{AI_SERVICE_BASE_URL}/employment/result/{candidate_id}"
+        headers = {
+            "Authorization": token
+        }
+
+        response = requests.get(
+            url,
+            headers=headers
+        )
+        return response.json()
     
-
-    
-@staticmethod
-def get_deepfake_result(
-
-        candidate_id,
-
-        token
-
-):
-
-
-
-    url=(
-
-
-        f"{AI_SERVICE_BASE_URL}"
-
-
-        f"/deepfake/result/{candidate_id}"
-
-
-    )
-
-
-
-    headers={
-
-
-        "Authorization":
-
-        token
-
-
-    }
-
-
-
-    response=requests.get(
-
-
-        url,
-
-
-        headers=headers
-
-
-    )
-
-
-
-    return response.json()
-
-
-
-@staticmethod
-def verify_face_match(
-
-        candidate_id,
-        bgv_id,
-        document_id,
-        token
-
-):
-
-
-    url=(
-
-        f"{AI_SERVICE_BASE_URL}"
-
-        "/face-match/verify"
-
-    )
-
-
-    headers={
-
-        "Authorization":token,
-
-        "Content-Type":
-
-        "application/json"
-
-    }
-
-
-    payload={
-
-        "candidate_id":
-
-        candidate_id,
-
-
-        "bgv_id":
-
-        bgv_id,
-
-
-        "document_id":
-
-        document_id
-
-    }
-
-
-
-    response=requests.post(
-
-        url,
-
-        headers=headers,
-
-        json=payload
-
-    )
-
-
-    return response.json()
-
-
-
-# ==========================================
-# GET FACE MATCH RESULT
-# ==========================================
-
-@staticmethod
-def get_face_match_result(
-
-        candidate_id,
-
-        token
-
-):
-
-
-
-    url=(
-
-        f"{AI_SERVICE_BASE_URL}"
-
-        f"/face-match/result/{candidate_id}"
-
-    )
-
-
-
-    headers={
-
-
-        "Authorization":
-
-        token
-
-    }
-
-
-
-    response=requests.get(
-
-        url,
-
-        headers=headers
-
-    )
-
-    return response.json()
-
-########################################
-# VERIFY CCRV
-########################################
-
-@staticmethod
-def verify_ccrv(
-
-        candidate_id,
-
-        bgv_id,
-
-        token
-
-):
-
-    url = (
-
-        f"{AI_SERVICE_BASE_URL}"
-
-        "/ccrv/verify"
-
-    )
-
-    headers = {
-
-        "Authorization": token,
-
-        "Content-Type": "application/json"
-
-    }
-
-    payload = {
-
-        "candidate_id": candidate_id,
-
-        "bgv_id": bgv_id
-
-    }
-
-    response = requests.post(
-
-        url,
-
-        headers=headers,
-
-        json=payload
-
-    )
-
-    return response.json()
-
-
-########################################
-# GET CCRV RESULT
-########################################
-
-@staticmethod
-def get_ccrv_result(
-
-        candidate_id,
-
-        token
-
-):
-
-    url = (
-
-        f"{AI_SERVICE_BASE_URL}"
-
-        f"/ccrv/result/{candidate_id}"
-
-    )
-
-    headers = {
-
-        "Authorization": token
-
-    }
-
-    response = requests.get(
-
-        url,
-
-        headers=headers
-
-    )
-
-    return response.json()
