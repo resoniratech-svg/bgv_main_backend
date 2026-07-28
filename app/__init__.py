@@ -42,6 +42,9 @@ from app.routes.ccrv_routes import ccrv_bp
 from app.routes.salary_slip_routes import (
     salary_slip_bp
 )
+from app.routes.bank_statement_routes import (
+    bank_statement_bp
+)
 # ==============================
 # Utils
 # ==============================
@@ -174,6 +177,14 @@ def create_app():
     url_prefix="/api/v1/salary-slip"
 
 )
+    app.register_blueprint(
+
+    bank_statement_bp,
+
+    url_prefix="/api/v1/bank-statement"
+
+)
+
     # ==============================
     # Logger
     # ==============================

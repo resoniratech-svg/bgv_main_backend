@@ -128,3 +128,32 @@ class CandidateRepository:
             return None
 
         return result["phone"]
+
+    ###############################################################
+    # GET BANK DETAILS
+    ###############################################################
+    @staticmethod
+    def get_bank_statement_details(candidate_id):
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        try:
+
+            cursor.execute(
+                """
+                SELECT
+                    bank_name,
+                    bank_statement_password
+                FROM candidates
+                WHERE id=%s
+                AND is_deleted=0
+                LIMIT 1
+                """,
+                (candidate_id,)
+            )
+
+            return cursor.fetchone()
+
+        finally:
+            cursor.close()
+            connection.close()

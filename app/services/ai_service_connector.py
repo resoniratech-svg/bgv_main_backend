@@ -563,3 +563,61 @@ class AIServiceConnector:
         )
         return response.json()
     
+    ########################################
+    # BANK STATEMENT UPLOAD
+    ########################################
+    @staticmethod
+    def upload_bank_statement(
+        candidate_id,
+        bgv_id,
+        document_id,
+        bank_name,
+        bank_statement_password,
+        token
+    ):
+        url = f"{AI_SERVICE_BASE_URL}/bank-statement/upload"
+
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id,
+            "document_id": document_id,
+            "bank_name": bank_name,
+            "bank_statement_password": bank_statement_password
+        }
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=180
+        )
+
+        return response.json()
+
+
+    ########################################
+    # BANK STATEMENT RESULT
+    ########################################
+    @staticmethod
+    def get_bank_statement_result(
+        candidate_id,
+        token
+    ):
+        url = f"{AI_SERVICE_BASE_URL}/bank-statement/result/{candidate_id}"
+
+        headers = {
+            "Authorization": token
+        }
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=120
+        )
+
+        return response.json()
