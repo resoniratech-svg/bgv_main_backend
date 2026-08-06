@@ -6,6 +6,7 @@ from app.repositories.candidate_verification_summary_repository import (
     CandidateVerificationSummaryRepository,
 )
 from app.services.ai_service_connector import AIServiceConnector
+from app.services.notification_service import NotificationService
 
 
 class ResumeService:
@@ -31,7 +32,12 @@ class ResumeService:
             candidate_name = (
                 f"{candidate['first_name']} {candidate.get('last_name', '')}"
             )
-
+            NotificationService.create_notification(
+                candidate_id=candidate_id,
+                title="Resume Parsed Successfully",
+                description="Resume has been parsed and extracted successfully.",
+                notification_type="Success",
+            )
             CandidateVerificationSummaryRepository.create_or_update_module_status(
                 candidate_id=candidate_id,
                 candidate_name=candidate_name,
@@ -64,6 +70,17 @@ class ResumeService:
 
         candidate_name = f"{candidate['first_name']} {candidate.get('last_name', '')}"
 
+        # Get existing decision before updating
+        old_summary = CandidateVerificationSummaryRepository.get_by_candidate_id(
+            candidate_id
+        )
+
+        old_decision = None
+
+        if old_summary:
+            old_decision = old_summary.get("resume_status")
+
+        # Update decision
         CandidateVerificationSummaryRepository.create_or_update_module_status(
             candidate_id=candidate_id,
             candidate_name=candidate_name,
@@ -74,4 +91,22 @@ class ResumeService:
             risk_level="LOW",
         )
 
+        from app.services.audit_service import AuditService
+
+        AuditService.log_action(
+            action="RESUME_DECISION",
+            module_name="RESUME",
+            entity_type="candidate",
+            entity_id=candidate_id,
+            status="SUCCESS",
+            remarks="Resume decision updated",
+            old_values={"decision": old_decision},
+            new_values={"decision": decision},
+        )
+        NotificationService.create_notification(
+            candidate_id=candidate_id,
+            title="Resume Decision Updated",
+            description=f"Resume verification marked as '{decision}'.",
+            notification_type="Success",
+        )
         return {"status": "success"}

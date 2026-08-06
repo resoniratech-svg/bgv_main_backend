@@ -33,13 +33,14 @@ from app.routes.pan_routes import pan_bp
 from app.routes.employment_routes import employment_bp
 from app.routes.education_routes import education_bp
 from app.routes.face_match_routes import face_match_bp
+from app.routes.deepfake_routes import deepfake_bp
 from app.routes.ocr_routes import ocr_bp
 from app.routes.resume_routes import resume_bp
 from app.routes.bgv_routes import bgv_bp
 from app.routes.candidate_link_routes import candidate_link_bp
 from app.routes.document_routes import document_bp
 from app.routes.health_routes import health_bp
-
+from app.routes.notification_routes import notification_bp
 from app.routes.pdf_report_routes import pdf_report_bp
 from app.routes.didit_routes import didit_bp
 
@@ -115,7 +116,9 @@ def create_app():
         verification_type_bp, url_prefix="/api/v1/verification-types"
     )
     # Audit APIs
-    app.register_blueprint(audit_bp, url_prefix="/api/v1")
+    app.register_blueprint(audit_bp, url_prefix="/api/v1/audit")
+    # Notification APIs
+    app.register_blueprint(notification_bp, url_prefix="/api/v1/notifications")
     # Dashboard APIs
     app.register_blueprint(dashboard_bp, url_prefix="/api/v1/dashboard")
     # fraud center
@@ -147,7 +150,8 @@ def create_app():
     app.register_blueprint(pan_bp, url_prefix="/api/v1/pan")
     app.register_blueprint(employment_bp, url_prefix="/api/v1/employment")
     app.register_blueprint(education_bp, url_prefix="/api/v1/education")
-    app.register_blueprint(face_match_bp, url_prefix="/api/v1/face_match")
+    app.register_blueprint(face_match_bp, url_prefix="/api/v1")
+    app.register_blueprint(deepfake_bp, url_prefix="/api/v1/deepfake")
     app.register_blueprint(ocr_bp, url_prefix="/api/v1")
     app.register_blueprint(resume_bp, url_prefix="/api/v1/resume")
     # ==============================

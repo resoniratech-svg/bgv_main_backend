@@ -8,7 +8,6 @@ import uuid
 
 
 class CandidateLinkRepository:
-
     @staticmethod
     def create_secure_link(data):
 
@@ -18,7 +17,7 @@ class CandidateLinkRepository:
 
         secure_token = uuid.uuid4().hex
 
-        expires_at = datetime.now() + timedelta(hours=48)
+        expires_at = datetime.now() + timedelta(days=7)
 
         query = """
         INSERT INTO candidate_access_links (
@@ -36,7 +35,7 @@ class CandidateLinkRepository:
             data.get("bgv_id"),
             secure_token,
             "ACTIVE",
-            expires_at
+            expires_at,
         )
 
         cursor.execute(query, values)
@@ -48,15 +47,13 @@ class CandidateLinkRepository:
         cursor.close()
         connection.close()
 
-        upload_url = (
-            f"{Config.FRONTEND_URL}/upload/{secure_token}"
-        )
+        upload_url = f"{Config.FRONTEND_URL}/upload/{secure_token}"
 
         return {
             "link_id": link_id,
             "secure_token": secure_token,
             "upload_url": upload_url,
-            "expires_at": str(expires_at)
+            "expires_at": str(expires_at),
         }
 
     @staticmethod
@@ -103,32 +100,15 @@ class CandidateLinkRepository:
         connection.close()
 
         if not result:
-
-            return {
-                "status": "error",
-                "message": "Invalid secure link"
-            }
+            return {"status": "error", "message": "Invalid secure link"}
 
         if result["status"] != "ACTIVE":
-
-            return {
-                "status": "error",
-                "message": "Link already used or locked"
-            }
+            return {"status": "error", "message": "Link already used or locked"}
 
         expires_at = result["expires_at"]
         if isinstance(expires_at, str):
-            expires_at = datetime.fromisoformat(
-                  expires_at
-            )
+            expires_at = datetime.fromisoformat(expires_at)
 
         if datetime.utcnow() > expires_at:
-            return {
-                "status": "error",
-                "message": "Link expired"
-            }
-        return {
-            "status": "success",
-            "message": "Valid secure link",
-            "data": result
-        }
+            return {"status": "error", "message": "Link expired"}
+        return {"status": "success", "message": "Valid secure link", "data": result}

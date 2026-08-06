@@ -466,14 +466,25 @@ WHERE
         connection.close()
 
         # Safe parsing with defaults handles standard cursor index offsets safely
+        if result is None:
+            return {
+                "total_candidates": 0,
+                "verified": 0,
+                "completed_today": 0,
+                "pending": 0,
+                "high_risk": 0,
+                "medium_risk": 0,
+                "low_risk": 0,
+            }
+
         return {
-            "total_candidates": result[0] or 0,
-            "verified": result[1] or 0,
-            "completed_today": result[2] or 0,
-            "pending": result[3] or 0,
-            "high_risk": result[4] or 0,
-            "medium_risk": result[5] or 0,
-            "low_risk": result[6] or 0,
+            "total_candidates": result.get("total_candidates", 0),
+            "verified": result.get("verified", 0),
+            "completed_today": result.get("completed_today", 0),
+            "pending": result.get("pending", 0),
+            "high_risk": result.get("high_risk", 0),
+            "medium_risk": result.get("medium_risk", 0),
+            "low_risk": result.get("low_risk", 0),
         }
 
     @staticmethod
@@ -693,3 +704,26 @@ WHERE
         connection.close()
 
         return True
+
+    @staticmethod
+    def get_by_candidate_id(candidate_id):
+
+        connection = get_connection()
+
+        cursor = connection.cursor()
+
+        query = """
+        SELECT *
+        FROM candidate_verification_summary
+        WHERE candidate_id = %s
+        LIMIT 1
+        """
+
+        cursor.execute(query, (candidate_id,))
+
+        result = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        return result

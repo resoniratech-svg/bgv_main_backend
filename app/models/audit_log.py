@@ -30,7 +30,7 @@ class AuditLog(db.Model):
     new_values = db.Column(db.JSON, nullable=True)
 
     status = db.Column(db.String(50), nullable=True)
-
+    changes = db.Column(db.JSON)
     remarks = db.Column(db.Text, nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

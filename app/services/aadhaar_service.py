@@ -2,27 +2,21 @@ from app.services.ai_service_connector import AIServiceConnector
 
 
 class AadhaarService:
-
     @staticmethod
     def generate_qr(candidate_id, bgv_id, token):
         return AIServiceConnector.generate_aadhaar_qr(
-            candidate_id=candidate_id,
-            bgv_id=bgv_id,
-            token=token
+            candidate_id=candidate_id, bgv_id=bgv_id, token=token
         )
 
     @staticmethod
-    def get_status(candidate_id, token):
-        return AIServiceConnector.get_aadhaar_status(
-            candidate_id=candidate_id,
-            token=token
-        )
-    
+    def get_status(candidate_id, token=None):
+
+        return AIServiceConnector.get_aadhaar_status(candidate_id, token)
+
     @staticmethod
     def get_result(candidate_id, token):
         return AIServiceConnector.get_aadhaar_result(
-            candidate_id=candidate_id,
-            token=token
+            candidate_id=candidate_id, token=token
         )
 
     @staticmethod
@@ -31,5 +25,5 @@ class AadhaarService:
             candidate_id=candidate_id,
             bgv_id=bgv_id,
             document_id=document_id,
-            token=token
+            token=token,
         )

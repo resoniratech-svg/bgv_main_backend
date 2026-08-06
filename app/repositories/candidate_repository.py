@@ -2,10 +2,10 @@ import uuid
 import traceback
 from flask import jsonify
 from app.database.connection import get_connection
+from app.services.notification_service import NotificationService
 
 
 class CandidateRepository:
-
     @staticmethod
     def create_candidate(data):
         connection = get_connection()
@@ -33,7 +33,7 @@ class CandidateRepository:
             data.get("email"),
             data.get("phone"),
             data.get("country"),
-            "PENDING"
+            "PENDING",
         )
 
         cursor.execute(query, values)
@@ -44,10 +44,7 @@ class CandidateRepository:
         cursor.close()
         connection.close()
 
-        return {
-            "candidate_id": candidate_id,
-            "candidate_code": candidate_code
-        }
+        return {"candidate_id": candidate_id, "candidate_code": candidate_code}
 
     @staticmethod
     def get_all_candidates():
@@ -67,6 +64,7 @@ class CandidateRepository:
                 c.email,
                 c.phone,
                 br.company_name,
+                br.bgv_id,
                 c.status,
                 DATE(c.created_at) AS created_at,
                 DATE(c.updated_at) AS updated_at
@@ -122,7 +120,7 @@ class CandidateRepository:
                 c.country,
 
                 br.company_name,
-
+                br.bgv_id,
                 c.status,
 
                 DATE(c.created_at) AS created_at,
@@ -143,7 +141,7 @@ class CandidateRepository:
         cursor.close()
         connection.close()
         return candidate
-    
+
     @staticmethod
     def update_candidate_status(candidate_id, data):
         connection = get_connection()
@@ -171,31 +169,52 @@ class CandidateRepository:
                 from app.services.email_service import EmailService
 
                 candidate = CandidateRepository.get_candidate_by_id(candidate_id)
-
-                EmailService.send_admin_alert(
+                email_sent = EmailService.send_admin_alert(
                     subject="Candidate Documents Submitted",
                     message=f"""
-        Candidate Name: {candidate.get('full_name')}
-        Candidate ID: {candidate.get('id')}
-        Status: DOCUMENTS_SUBMITTED
+                Candidate Name: {candidate.get("full_name")}
+                Candidate ID: {candidate.get("id")}
+                Status: DOCUMENTS_SUBMITTED
 
-        Candidate has uploaded documents successfully.
-        Start verification process.
-        """
+                Candidate has uploaded documents successfully.
+                Start verification process.
+                """,
                 )
-                print("DOCUMENT SUBMISSION EMAIL SENT")
 
+                if email_sent:
+                    print("DOCUMENT SUBMISSION EMAIL SENT")
+
+                    NotificationService.create_notification(
+                        candidate_id=candidate_id,
+                        bgv_id=candidate.get("bgv_id"),
+                        title="Admin Alert Sent",
+                        description=f"Admin has been notified that {candidate.get('full_name')} submitted documents.",
+                        notification_type="Info",
+                    )
+            #         EmailService.send_admin_alert(
+            #             subject="Candidate Documents Submitted",
+            #             message=f"""
+            # Candidate Name: {candidate.get("full_name")}
+            # Candidate ID: {candidate.get("id")}
+            # Status: DOCUMENTS_SUBMITTED
+
+            # Candidate has uploaded documents successfully.
+            # Start verification process.
+            # """,
+            #         )
+            #         print("DOCUMENT SUBMISSION EMAIL SENT")
+            #         NotificationService.create_notification(
+            #             candidate_id=candidate_id,
+            #             bgv_id=candidate.get("bgv_id"),
+            #             title="Documents Submitted",
+            #             description=f"{candidate.get('full_name')} has submitted all verification documents.",
+            #             notification_type="Success",
+            #         )
             except Exception as e:
                 traceback.print_exc()
-                return jsonify({
-                    "status": "error",
-                    "message": str(e)
-                }), 500
+                return jsonify({"status": "error", "message": str(e)}), 500
 
-        return {
-            "status": "success",
-            "message": "Candidate status updated successfully"
-        }
+        return {"status": "success", "message": "Candidate status updated successfully"}
 
     @staticmethod
     def update_candidate(candidate_id, data):
@@ -222,8 +241,8 @@ class CandidateRepository:
                 data.get("email"),
                 data.get("phone"),
                 data.get("country"),
-                candidate_id
-            )
+                candidate_id,
+            ),
         )
 
         # 2. Update relational context inside the bgv_requests table
@@ -233,22 +252,13 @@ class CandidateRepository:
         WHERE candidate_id = %s
         """
 
-        cursor.execute(
-            bgv_query,
-            (
-                data.get("company_name"),
-                candidate_id
-            )
-        )
+        cursor.execute(bgv_query, (data.get("company_name"), candidate_id))
 
         connection.commit()
         cursor.close()
         connection.close()
 
-        return {
-            "status": "success",
-            "message": "Candidate updated successfully"
-        }
+        return {"status": "success", "message": "Candidate updated successfully"}
 
     @staticmethod
     def delete_candidate(candidate_id):
@@ -269,7 +279,4 @@ class CandidateRepository:
         cursor.close()
         connection.close()
 
-        return {
-            "status": "success",
-            "message": "Candidate deleted successfully"
-        }
+        return {"status": "success", "message": "Candidate deleted successfully"}

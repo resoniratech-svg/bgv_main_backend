@@ -1,89 +1,44 @@
 import os
 import uuid
-from app.repositories.document_repository import (
-    DocumentRepository
-)
+from app.repositories.document_repository import DocumentRepository
 from werkzeug.utils import secure_filename
+from app.services.notification_service import NotificationService
 
-
-from app.repositories.candidate_link_repository import (
-    CandidateLinkRepository
-)
+from app.repositories.candidate_link_repository import CandidateLinkRepository
 
 
 class DocumentService:
-
     UPLOAD_FOLDER = "uploads"
 
     @staticmethod
-    def upload_document(
-        secure_token,
-        document_type,
-        file
-    ):
+    def upload_document(secure_token, document_type, file):
 
-        validation_result = (
-            CandidateLinkRepository.validate_secure_token(
-                secure_token
-            )
-        )
+        validation_result = CandidateLinkRepository.validate_secure_token(secure_token)
 
         if validation_result["status"] == "error":
-
             return validation_result
 
         candidate_data = validation_result["data"]
 
         if not file:
+            return {"status": "error", "message": "File is required"}
 
-            return {
-                "status": "error",
-                "message": "File is required"
-            }
+        allowed_extensions = ["pdf", "jpg", "jpeg", "png"]
 
-        allowed_extensions = [
-            "pdf",
-            "jpg",
-            "jpeg",
-            "png"
-        ]
+        allowed_mime_types = ["application/pdf", "image/jpeg", "image/png"]
 
-        allowed_mime_types = [
-            "application/pdf",
-            "image/jpeg",
-            "image/png"
-        ]
-
-        original_filename = secure_filename(
-            file.filename
-        )
+        original_filename = secure_filename(file.filename)
 
         if "." not in original_filename:
+            return {"status": "error", "message": "Invalid file"}
 
-            return {
-                "status": "error",
-                "message": "Invalid file"
-            }
-
-        extension = (
-            original_filename
-            .split(".")[-1]
-            .lower()
-        )
+        extension = original_filename.split(".")[-1].lower()
 
         if extension not in allowed_extensions:
-
-            return {
-                "status": "error",
-                "message": "Unsupported file type"
-            }
+            return {"status": "error", "message": "Unsupported file type"}
 
         if file.mimetype not in allowed_mime_types:
-
-            return {
-                "status": "error",
-                "message": "Invalid mime type"
-            }
+            return {"status": "error", "message": "Invalid mime type"}
 
         MAX_FILE_SIZE = 10 * 1024 * 1024
 
@@ -94,88 +49,53 @@ class DocumentService:
         file.seek(0)
 
         if file_size > MAX_FILE_SIZE:
+            return {"status": "error", "message": "File size exceeds 10MB"}
 
-            return {
-                "status": "error",
-                "message": "File size exceeds 10MB"
-            }
-
-        stored_filename = (
-            f"{uuid.uuid4().hex}.{extension}"
-        )
+        stored_filename = f"{uuid.uuid4().hex}.{extension}"
 
         candidate_folder = os.path.join(
-
             DocumentService.UPLOAD_FOLDER,
-
             f"candidate_{candidate_data['candidate_id']}",
-
-            document_type
-
+            document_type,
         )
 
-        os.makedirs(
-            candidate_folder,
-            exist_ok=True
-        )
+        os.makedirs(candidate_folder, exist_ok=True)
 
-        relative_file_path = os.path.join(
-            candidate_folder,
-            stored_filename
-        )
+        relative_file_path = os.path.join(candidate_folder, stored_filename)
 
-        file.save(
-            relative_file_path
-        )
+        file.save(relative_file_path)
 
         # ======================================
         # PRODUCTION FIX
         # STORE ABSOLUTE PATH IN DATABASE
         # ======================================
 
-        absolute_file_path = os.path.abspath(
-            relative_file_path
-        )
+        absolute_file_path = os.path.abspath(relative_file_path)
 
-        absolute_file_path = absolute_file_path.replace(
-            "\\",
-            "/"
-        )
+        absolute_file_path = absolute_file_path.replace("\\", "/")
 
-        saved_file_size = os.path.getsize(
-            relative_file_path
-        )
+        saved_file_size = os.path.getsize(relative_file_path)
 
         if saved_file_size == 0:
-
-            raise Exception(
-                "Uploaded file is empty after save"
-            )
+            raise Exception("Uploaded file is empty after save")
 
         data = {
-
             "candidate_id": candidate_data["candidate_id"],
-
             "bgv_id": candidate_data["bgv_id"],
-
             "access_link_id": candidate_data["id"],
-
             "document_type": document_type,
-
             "original_filename": original_filename,
-
             "stored_filename": stored_filename,
-
             "file_path": absolute_file_path,
-
             "mime_type": file.mimetype,
-
-            "file_size": saved_file_size
+            "file_size": saved_file_size,
         }
-        DocumentRepository.delete_existing_document(
-            candidate_data["candidate_id"],
-            document_type
-        )
+        multi_documents = ["Education", "Employment", "Salary Slip"]
+
+        if document_type not in multi_documents:
+            DocumentRepository.delete_existing_document(
+                candidate_data["candidate_id"], document_type
+            )
 
         print("=" * 80)
         print("DOCUMENT UPLOAD DEBUG")
@@ -186,45 +106,31 @@ class DocumentService:
         print("FILE SIZE =", saved_file_size)
         print("=" * 80)
 
-        result = (
-            DocumentRepository.save_uploaded_document(
-                data
-            )
+        result = DocumentRepository.save_uploaded_document(data)
+        NotificationService.create_notification(
+            candidate_id=candidate_data["candidate_id"],
+            bgv_id=candidate_data["bgv_id"],
+            title=f"{document_type} Document Uploaded",
+            description=f"Candidate uploaded {document_type}. Verification can now be initiated.",
+            notification_type="Info",
         )
-
         return {
-
             "status": "success",
-
             "message": "Document uploaded successfully",
-
             "data": {
-
                 "document_id": result["document_id"],
-
-                "stored_filename": stored_filename
-
-            }
+                "stored_filename": stored_filename,
+            },
         }
-    
+
     @staticmethod
     def get_candidate_documents(candidate_id):
 
-        documents = (
-            DocumentRepository.get_candidate_documents(
-                candidate_id
-            )
-        )
+        documents = DocumentRepository.get_candidate_documents(candidate_id)
 
-        return {
-            "status": "success",
-            "data": documents
-        }
+        return {"status": "success", "data": documents}
+
     @staticmethod
     def get_document_file(document_id):
 
-        return (
-            DocumentRepository.get_document_by_id(
-                document_id
-            )
-        )
+        return DocumentRepository.get_document_by_id(document_id)

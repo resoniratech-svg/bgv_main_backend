@@ -20,10 +20,7 @@ def verify_pan():
         return jsonify(result), 200
 
     except Exception as error:
-        return jsonify({
-            "status": "error",
-            "message": str(error)
-        }), 500
+        return jsonify({"status": "error", "message": str(error)}), 500
 
 
 @pan_bp.route("/result/<int:candidate_id>", methods=["GET"])
@@ -35,13 +32,22 @@ def get_pan_result(candidate_id):
         # Fixed: Changed PANService to PanService to match the import statement
         result = PanService.get_result(candidate_id, token)
 
-        return jsonify({
-            "status": "success",
-            "data": result
-        }), 200
+        return jsonify({"status": "success", "data": result}), 200
 
     except Exception as error:
-        return jsonify({
-            "status": "error",
-            "message": str(error)
-        }), 500
+        return jsonify({"status": "error", "message": str(error)}), 500
+
+
+@pan_bp.route("/decision", methods=["POST"])
+@jwt_required()
+def save_pan_decision():
+
+    try:
+        data = request.get_json()
+
+        result = PanService.save_decision(data)
+
+        return jsonify(result), 200
+
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 500

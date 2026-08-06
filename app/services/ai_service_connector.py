@@ -26,13 +26,18 @@ class AIServiceConnector:
 
     @staticmethod
     def verify_pan(candidate_id, bgv_id, document_id, token):
+
         url = f"{AI_SERVICE_BASE_URL}/pan/verify"
+
         headers = {"Authorization": token, "Content-Type": "application/json"}
+
         payload = {
             "candidate_id": candidate_id,
             "bgv_id": bgv_id,
             "document_id": document_id,
         }
+
+        response = requests.post(url, headers=headers, json=payload)
 
         return response.json()
 
@@ -95,18 +100,62 @@ class AIServiceConnector:
 
         url = f"{AI_SERVICE_BASE_URL}/reports/download/{candidate_id}"
 
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        headers = {"Authorization": token}
+
+        response = requests.get(url, headers=headers)
+
+        return response
 
     @staticmethod
     def get_pan_result(candidate_id, token):
+
         url = f"{AI_SERVICE_BASE_URL}/pan/result/{candidate_id}"
 
         headers = {"Authorization": token}
 
-        response = requests.get(url, headers=headers, stream=True)
+        response = requests.get(url, headers=headers)
 
-        return response
+        return response.json()
+
+    @staticmethod
+    def verify_face_match(candidate_id, bgv_id, document_id, token):
+
+        url = f"{AI_SERVICE_BASE_URL}/face-match/verify"
+
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json",
+        }
+
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id,
+            "document_id": document_id,
+        }
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+        )
+
+        return response.json()
+
+    @staticmethod
+    def get_face_match_result(candidate_id, token):
+
+        url = f"{AI_SERVICE_BASE_URL}/face-match/result/{candidate_id}"
+
+        headers = {
+            "Authorization": token,
+        }
+
+        response = requests.get(
+            url,
+            headers=headers,
+        )
+
+        return response.json()
 
     @staticmethod
     def verify_salary_slip(file_path, candidate_id):
@@ -136,18 +185,26 @@ class AIServiceConnector:
     @staticmethod
     def generate_aadhaar_qr(candidate_id, bgv_id, token):
         url = f"{AI_SERVICE_BASE_URL}/aadhaar/generate-qr"
-        headers = {"Authorization": token, "Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = token
         payload = {"candidate_id": candidate_id, "bgv_id": bgv_id}
 
         response = requests.post(url, headers=headers, json=payload)
         return response.json()
 
     @staticmethod
-    def get_aadhaar_status(candidate_id, token):
+    def get_aadhaar_status(candidate_id, token=None):
+
         url = f"{AI_SERVICE_BASE_URL}/aadhaar/status/{candidate_id}"
-        headers = {"Authorization": token}
+
+        headers = {}
+
+        if token:
+            headers["Authorization"] = token
 
         response = requests.get(url, headers=headers)
+
         return response.json()
 
     @staticmethod
@@ -198,4 +255,68 @@ class AIServiceConnector:
         }
 
         response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+    @staticmethod
+    def get_salary_slip_result(candidate_id):
+
+        url = f"{AI_SERVICE_BASE_URL}/salary-slip/result/{candidate_id}"
+
+        print("\n====================")
+        print("SALARY RESULT URL")
+        print(url)
+
+        response = requests.get(url)
+
+        print("STATUS CODE")
+        print(response.status_code)
+
+        print("RESPONSE TEXT")
+        print(response.text)
+
+        print("====================\n")
+
+        return response.json()
+
+    @staticmethod
+    def verify_deepfake(candidate_id, bgv_id, document_id, token):
+
+        url = f"{AI_SERVICE_BASE_URL}/deepfake/verify"
+
+        headers = {"Authorization": token, "Content-Type": "application/json"}
+
+        payload = {
+            "candidate_id": candidate_id,
+            "bgv_id": bgv_id,
+            "document_id": document_id,
+        }
+
+        print("\n===================")
+        print("DEEPFAKE URL")
+        print(url)
+
+        print("PAYLOAD")
+        print(payload)
+
+        response = requests.post(url, headers=headers, json=payload)
+
+        print("STATUS CODE")
+        print(response.status_code)
+
+        print("RESPONSE TEXT")
+        print(response.text)
+
+        print("===================\n")
+
+        return response.json()
+
+    @staticmethod
+    def get_deepfake_result(candidate_id, token):
+
+        url = f"{AI_SERVICE_BASE_URL}/deepfake/result/{candidate_id}"
+
+        headers = {"Authorization": token}
+
+        response = requests.get(url, headers=headers)
+
         return response.json()

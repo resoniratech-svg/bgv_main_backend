@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from app.extensions import db
 from app.models.verification_type import VerificationType
 from app.utils.role_required import role_required
-from app.services.audit_service import log_action
+from app.services.audit_service import AuditService
 
 verification_type_bp = Blueprint("verification_types", __name__)
 
@@ -19,13 +19,15 @@ def get_verification_types():
 
     result = []
     for t in types:
-        result.append({
-            "id": t.id,
-            "name": t.name,
-            "description": t.description,
-            "is_active": t.is_active,
-            "created_at": str(t.created_at)
-        })
+        result.append(
+            {
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "is_active": t.is_active,
+                "created_at": str(t.created_at),
+            }
+        )
 
     return jsonify(result), 200
 
@@ -45,37 +47,30 @@ def create_verification_type():
             name=data.get("name"),
             description=data.get("description"),
             is_active=True,
-            is_deleted=False
+            is_deleted=False,
         )
 
         db.session.add(vt)
         db.session.commit()
 
-        log_action(
+        AuditService.log_action(
             action="VERIFICATION_TYPE_CREATED",
             entity_type="VERIFICATION_TYPE",
-            entity_id=vt.id
+            entity_id=vt.id,
         )
 
-        return jsonify({
-            "message": "Verification type created",
-            "id": vt.id
-        }), 201
+        return jsonify({"message": "Verification type created", "id": vt.id}), 201
 
     except IntegrityError:
         db.session.rollback()
 
-        return jsonify({
-            "error": "Verification type already exists"
-        }), 409
+        return jsonify({"error": "Verification type already exists"}), 409
 
     except Exception as e:
         db.session.rollback()
 
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # =================================
 # UPDATE VERIFICATION TYPE - Admin
@@ -96,10 +91,10 @@ def update_verification_type(type_id):
 
     db.session.commit()
 
-    log_action(
+    AuditService.log_action(
         action="VERIFICATION_TYPE_UPDATED",
         entity_type="VERIFICATION_TYPE",
-        entity_id=vt.id
+        entity_id=vt.id,
     )
 
     return jsonify({"message": "Verification type updated"}), 200
@@ -120,10 +115,10 @@ def delete_verification_type(type_id):
     vt.is_deleted = True
     db.session.commit()
 
-    log_action(
+    AuditService.log_action(
         action="VERIFICATION_TYPE_DELETED",
         entity_type="VERIFICATION_TYPE",
-        entity_id=vt.id
+        entity_id=vt.id,
     )
 
     return jsonify({"message": "Verification type deleted"}), 200
