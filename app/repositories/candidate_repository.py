@@ -106,7 +106,7 @@ class CandidateRepository:
                 c.last_name,
 
                 CONCAT(
-                    c.first_name,
+                    c.first_name,  
                     ' ',
                     c.last_name
                 ) AS full_name,
@@ -221,44 +221,72 @@ class CandidateRepository:
         connection = get_connection()
         cursor = connection.cursor()
 
-        # 1. Update candidate baseline profile data (including country)
-        candidate_query = """
-        UPDATE candidates
-        SET
-            first_name = %s,
-            last_name = %s,
-            email = %s,
-            phone = %s,
-            country = %s
-        WHERE id = %s
-        """
+        try:
+            # =====================================================
+            # 1. UPDATE CANDIDATE PROFILE
+            # =====================================================
 
-        cursor.execute(
-            candidate_query,
-            (
-                data.get("first_name"),
-                data.get("last_name"),
-                data.get("email"),
-                data.get("phone"),
-                data.get("country"),
-                candidate_id,
-            ),
-        )
+            candidate_query = """
+            UPDATE candidates
+            SET
+                first_name = %s,
+                last_name = %s,
+                email = %s,
+                phone = %s,
+                country = %s,
+                bank_name = %s,
+                bank_statement_password = %s
+            WHERE id = %s
+            """
 
-        # 2. Update relational context inside the bgv_requests table
-        bgv_query = """
-        UPDATE bgv_requests
-        SET company_name = %s
-        WHERE candidate_id = %s
-        """
+            cursor.execute(
+                candidate_query,
+                (
+                    data.get("first_name"),
+                    data.get("last_name"),
+                    data.get("email"),
+                    data.get("phone"),
+                    data.get("country"),
+                    data.get("bank_name"),
+                    data.get("bank_statement_password"),
+                    candidate_id,
+                ),
+            )
 
-        cursor.execute(bgv_query, (data.get("company_name"), candidate_id))
+            # =====================================================
+            # 2. UPDATE BGV REQUEST COMPANY
+            # =====================================================
 
-        connection.commit()
-        cursor.close()
-        connection.close()
+            bgv_query = """
+            UPDATE bgv_requests
+            SET
+                company_name = %s
+            WHERE candidate_id = %s
+            """
 
-        return {"status": "success", "message": "Candidate updated successfully"}
+            cursor.execute(
+                bgv_query,
+                (
+                    data.get("company_name"),
+                    candidate_id,
+                ),
+            )
+
+            connection.commit()
+
+            return {
+                "status": "success",
+                "message": "Candidate updated successfully",
+            }
+
+        except Exception:
+            connection.rollback()
+            traceback.print_exc()
+            raise
+
+        finally:
+            cursor.close()
+            connection.close()
 
     @staticmethod
     def delete_candidate(candidate_id):
@@ -280,3 +308,127 @@ class CandidateRepository:
         connection.close()
 
         return {"status": "success", "message": "Candidate deleted successfully"}
+
+    @staticmethod
+    def update_candidate_profile(
+        candidate_id: int, date_of_birth: str, gender: str
+    ) -> bool:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        query = """
+        UPDATE candidates
+        SET
+            date_of_birth = %s,
+            gender = %s
+        WHERE id = %s
+        """
+
+        try:
+            cursor.execute(query, (date_of_birth, gender, candidate_id))
+            connection.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            connection.rollback()
+            raise e
+        finally:
+            cursor.close()
+            connection.close()
+
+    @staticmethod
+    def get_candidate_mobile(candidate_id):
+
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            SELECT phone
+            FROM candidates
+            WHERE id=%s
+            """,
+            (candidate_id,),
+        )
+
+        result = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if not result:
+            return None
+
+        return result["phone"]
+
+    ###############################################################
+    # GET BANK DETAILS
+    ###############################################################
+    @staticmethod
+    def get_bank_statement_details(candidate_id):
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                """
+                SELECT
+                    bank_name,
+                    bank_statement_password
+                FROM candidates
+                WHERE id=%s
+                AND is_deleted=0
+                LIMIT 1
+                """,
+                (candidate_id,),
+            )
+
+            return cursor.fetchone()
+
+        finally:
+            cursor.close()
+            connection.close()
+
+    ###############################################################
+    # SAVE BANK STATEMENT DETAILS
+    ###############################################################
+    @staticmethod
+    def save_bank_statement_details(
+        candidate_id,
+        bank_name,
+        bank_statement_password,
+    ):
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        try:
+            query = """
+            UPDATE candidates
+            SET
+                bank_name = %s,
+                bank_statement_password = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            AND is_deleted = 0
+            """
+
+            cursor.execute(
+                query,
+                (
+                    bank_name,
+                    bank_statement_password,
+                    candidate_id,
+                ),
+            )
+
+            connection.commit()
+
+            return cursor.rowcount > 0
+
+        except Exception:
+            connection.rollback()
+            traceback.print_exc()
+            raise
+
+        finally:
+            cursor.close()
+            connection.close()

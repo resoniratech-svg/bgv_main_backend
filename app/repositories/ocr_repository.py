@@ -3,7 +3,6 @@ import json
 
 
 class OCRRepository:
-
     @staticmethod
     def create_ocr_result(
         verification_result_id,
@@ -11,7 +10,7 @@ class OCRRepository:
         extracted_text,
         extracted_json,
         confidence_score=100,
-        remarks="OCR Extraction Completed"
+        remarks="OCR Extraction Completed",
     ):
 
         connection = get_connection()
@@ -45,13 +44,10 @@ class OCRRepository:
             extracted_text,
             json.dumps(extracted_json),
             confidence_score,
-            remarks
+            remarks,
         )
 
-        cursor.execute(
-            query,
-            values
-        )
+        cursor.execute(query, values)
 
         connection.commit()
 

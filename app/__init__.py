@@ -1,13 +1,7 @@
-from flask import Flask, app
+from flask import Flask
 from flask_cors import CORS
-from app.routes.fraud_routes import fraud_bp
 from sqlalchemy import text
-from app.routes.salary_slip_routes import salary_slip_bp
-from app.routes.candidate_verification_summary_routes import verification_summary_bp
 
-# from app.routes.verification_summary_routes import (
-#     verification_summary_bp
-# )
 from config import Config
 from app.extensions import db, jwt, bcrypt, migrate, limiter
 from app.routes.candidate_routes import candidate_bp
@@ -16,57 +10,57 @@ from app.routes.candidate_routes import candidate_bp
 # Blueprints
 # ==============================
 from app.routes.auth_routes import auth_bp
-from app.routes.user_routes import user_bp
 from app.routes.verification_type_routes import verification_type_bp
-from app.routes.candidate_verification_summary_routes import verification_summary_bp
 from app.routes.dashboard_routes import dashboard_bp
 from app.routes.report_routes import report_bp
 from app.routes.compliance_routes import compliance_bp
 from app.routes.passport_routes import passport_bp
-from app.routes.court_routes import court_bp
+
 from app.routes.din_routes import din_bp
 from app.routes.global_database_routes import global_database_bp
 from app.routes.reference_routes import reference_bp
 from app.routes.credit_check_routes import credit_check_bp
 from app.routes.aadhaar_routes import aadhaar_bp
 from app.routes.pan_routes import pan_bp
-from app.routes.employment_routes import employment_bp
+
 from app.routes.education_routes import education_bp
 from app.routes.face_match_routes import face_match_bp
-from app.routes.deepfake_routes import deepfake_bp
 from app.routes.ocr_routes import ocr_bp
 from app.routes.resume_routes import resume_bp
 from app.routes.bgv_routes import bgv_bp
 from app.routes.candidate_link_routes import candidate_link_bp
 from app.routes.document_routes import document_bp
 from app.routes.health_routes import health_bp
-from app.routes.notification_routes import notification_bp
 from app.routes.pdf_report_routes import pdf_report_bp
 from app.routes.didit_routes import didit_bp
-
-from app.routes.audit_routes import audit_bp  # ==============================
-
-from app.routes.pdf_report_routes import pdf_report_bp
-from app.routes.didit_routes import didit_bp
-
 from app.routes.driving_license_routes import driving_license_bp
+from app.routes.deepfake_routes import deepfake_bp
+from app.routes.consent_routes import consent_bp
+from app.routes.credit_bureau_routes import credit_bureau_bp
+from app.routes.submission_routes import submission_bp
+from app.routes.ccrv_routes import ccrv_bp
+from app.routes.salary_slip_routes import salary_slip_bp
+from app.routes.bank_statement_routes import bank_statement_bp
+from app.routes.user_routes import user_bp
+from app.routes.audit_routes import audit_bp
+from app.routes.notification_routes import notification_bp
+from app.routes.fraud_routes import fraud_bp
+from app.routes.candidate_verification_summary_routes import verification_summary_bp
 
 # ==============================
-
 # Utils
 # ==============================
 from app.utils.error_handler import register_error_handlers
 from app.utils.logger import setup_logger
-from app.routes.submission_routes import submission_bp
 
 # ==============================
 # Import Models
 # ==============================
 from app.models import User, BGVRequest, VerificationResult, VerificationType, AuditLog
+from app.routes.employment_routes import employment_bp
 
 
 def create_app():
-
     app = Flask(__name__)
 
     print("CREATE_APP IS EXECUTING")
@@ -89,10 +83,6 @@ def create_app():
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     # ==============================
-    # salary_slip_bp
-    # ==============================
-    app.register_blueprint(salary_slip_bp, url_prefix="/api/v1")
-    # ==============================
     # Initialize Extensions
     # ==============================
     db.init_app(app)
@@ -100,14 +90,29 @@ def create_app():
     bcrypt.init_app(app)
     migrate.init_app(app, db)
     # limiter.init_app(app)
+    # User APIs
+    app.register_blueprint(user_bp, url_prefix="/api/v1/users")
 
+    # Audit APIs
+    app.register_blueprint(audit_bp, url_prefix="/api/v1/audit")
+
+    # Notification APIs
+    app.register_blueprint(notification_bp, url_prefix="/api/v1/notifications")
+
+    # Fraud APIs
+    app.register_blueprint(fraud_bp, url_prefix="/api/v1/fraud")
+
+    # Verification Summary APIs
+    app.register_blueprint(
+        verification_summary_bp, url_prefix="/api/v1/verification-summary"
+    )
     # ==============================
     # Register Blueprints
     # ==============================
 
     # Authentication APIs
     app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
-    app.register_blueprint(user_bp, url_prefix="/api/v1/users")
+
     # BGV APIs
     app.register_blueprint(bgv_bp, url_prefix="/api/v1/bgv")
 
@@ -115,14 +120,9 @@ def create_app():
     app.register_blueprint(
         verification_type_bp, url_prefix="/api/v1/verification-types"
     )
-    # Audit APIs
-    app.register_blueprint(audit_bp, url_prefix="/api/v1/audit")
-    # Notification APIs
-    app.register_blueprint(notification_bp, url_prefix="/api/v1/notifications")
+
     # Dashboard APIs
     app.register_blueprint(dashboard_bp, url_prefix="/api/v1/dashboard")
-    # fraud center
-    app.register_blueprint(fraud_bp, url_prefix="/api/v1/fraud")
 
     # Report APIs
     app.register_blueprint(report_bp, url_prefix="/api/v1/report")
@@ -130,12 +130,13 @@ def create_app():
     # Compliance APIs
     app.register_blueprint(compliance_bp, url_prefix="/api/v1/compliance")
     app.register_blueprint(passport_bp, url_prefix="/api/v1/passport")
-    app.register_blueprint(court_bp, url_prefix="/api/v1/court")
 
     app.register_blueprint(din_bp, url_prefix="/api/v1/din")
     app.register_blueprint(global_database_bp, url_prefix="/api/v1/global_database")
     app.register_blueprint(reference_bp, url_prefix="/api/v1/reference")
     app.register_blueprint(credit_check_bp, url_prefix="/api/v1/credit_check")
+
+    # Base V1 APIs
     app.register_blueprint(candidate_bp, url_prefix="/api/v1")
     app.register_blueprint(candidate_link_bp, url_prefix="/api/v1")
     app.register_blueprint(document_bp, url_prefix="/api/v1")
@@ -143,23 +144,24 @@ def create_app():
     app.register_blueprint(health_bp, url_prefix="/api/v1")
     app.register_blueprint(pdf_report_bp, url_prefix="/api/v1")
     app.register_blueprint(didit_bp, url_prefix="/api/v1")
+    app.register_blueprint(face_match_bp, url_prefix="/api/v1")
+    app.register_blueprint(ocr_bp, url_prefix="/api/v1")
+    app.register_blueprint(credit_bureau_bp, url_prefix="/api/v1/credit-bureau")
+    app.register_blueprint(ccrv_bp, url_prefix="/api/v1/ccrv")
 
+    # Individual Verification Services
     app.register_blueprint(driving_license_bp, url_prefix="/api/v1/driving-license")
-
     app.register_blueprint(aadhaar_bp, url_prefix="/api/v1/aadhaar")
     app.register_blueprint(pan_bp, url_prefix="/api/v1/pan")
     app.register_blueprint(employment_bp, url_prefix="/api/v1/employment")
     app.register_blueprint(education_bp, url_prefix="/api/v1/education")
-    app.register_blueprint(face_match_bp, url_prefix="/api/v1")
-    app.register_blueprint(deepfake_bp, url_prefix="/api/v1/deepfake")
-    app.register_blueprint(ocr_bp, url_prefix="/api/v1")
+
+    # AI & Validation Services
     app.register_blueprint(resume_bp, url_prefix="/api/v1/resume")
-    # ==============================
-    # verification summary
-    # ==============================
-    app.register_blueprint(
-        verification_summary_bp, url_prefix="/api/v1/verification-summary"
-    )
+    app.register_blueprint(deepfake_bp, url_prefix="/api/v1/deepfake")
+    app.register_blueprint(consent_bp, url_prefix="/api/v1/consent")
+    app.register_blueprint(salary_slip_bp, url_prefix="/api/v1/salary-slip")
+    app.register_blueprint(bank_statement_bp, url_prefix="/api/v1/bank-statement")
 
     # ==============================
     # Logger
@@ -178,7 +180,6 @@ def create_app():
         try:
             db.session.execute(text("SELECT 1"))
             print("Database connection successful.")
-
         except Exception as e:
             print(f"Database connection failed: {str(e)}")
 

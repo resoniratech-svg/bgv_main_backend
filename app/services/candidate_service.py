@@ -19,7 +19,21 @@ class CandidateService:
                 return {"status": "error", "message": f"{field} is required"}
 
         candidate_result = CandidateRepository.create_candidate(data)
+        from app.services.candidate_verification_summary_service import (
+            CandidateVerificationSummaryService,
+        )
 
+        summary_result = (
+            CandidateVerificationSummaryService.initialize_candidate_summary(
+                candidate_result["candidate_id"]
+            )
+        )
+
+        if not summary_result.get("success"):
+            return {
+                "status": "error",
+                "message": "Candidate created but verification summary could not be initialized",
+            }
         AuditService.log_action(
             action="CREATE_CANDIDATE",
             module_name="CANDIDATES",

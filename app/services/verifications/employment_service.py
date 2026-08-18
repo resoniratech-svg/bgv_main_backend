@@ -2,7 +2,6 @@ from app.services.verifications.base import BaseVerificationService
 
 
 class EmploymentVerificationService(BaseVerificationService):
-
     def execute(self, data):
         # Simulated logic
         if data.get("employment_verified"):
@@ -10,12 +9,12 @@ class EmploymentVerificationService(BaseVerificationService):
                 "verification_type": "Employment",
                 "status": "Verified",
                 "module_score": 85.50,
-                "remarks": "Employment verified successfully"
+                "remarks": "Employment verified successfully",
             }
 
         return {
             "verification_type": "Employment",
             "status": "Failed",
             "module_score": 20.00,
-            "remarks": "Employment verification failed"
+            "remarks": "Employment verification failed",
         }

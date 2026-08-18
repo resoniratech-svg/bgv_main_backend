@@ -3,7 +3,6 @@ import uuid
 
 
 class BGVRepository:
-
     @staticmethod
     def create_bgv_request(data):
 
@@ -29,7 +28,7 @@ class BGVRepository:
             data.get("candidate_id"),
             bgv_id,
             data.get("company_name"),
-            "INITIATED"
+            "INITIATED",
         )
 
         print("VALUES:", values)
@@ -48,7 +47,4 @@ class BGVRepository:
 
         print("========== BGV CREATE END ==========")
 
-        return {
-            "id": record_id,
-            "bgv_id": bgv_id
-        }
+        return {"id": record_id, "bgv_id": bgv_id}

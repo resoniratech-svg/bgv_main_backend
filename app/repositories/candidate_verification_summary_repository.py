@@ -24,6 +24,7 @@ class CandidateVerificationSummaryRepository:
             ("dl_status", "Driving License Verification"),
             ("deepfake_status", "Deepfake Detection"),
             ("salary_slip_status", "Salary Slip Verification"),
+            ("bank_statement_status", "Bank Statement Verification"),
         ]
 
         queries = []
@@ -70,71 +71,107 @@ class CandidateVerificationSummaryRepository:
 
     @staticmethod
     def create_or_update_module_status(
-        candidate_id, candidate_name, email, phone, column_name, status, risk_level=None
+        candidate_id,
+        candidate_name,
+        email,
+        phone,
+        column_name,
+        status,
+        risk_level=None,
     ):
-
         connection = get_connection()
-
         cursor = connection.cursor()
 
-        check_query = """
-        SELECT id
-        FROM candidate_verification_summary
-        WHERE candidate_id = %s
-        """
-
-        cursor.execute(check_query, (candidate_id,))
-
-        existing = cursor.fetchone()
-
-        if existing:
-            query = f"""
-            UPDATE candidate_verification_summary
-            SET
-                {column_name} = %s,
-                risk_level = %s,
-                updated_at = NOW()
-            WHERE candidate_id = %s
+        try:
+            check_query = """
+                SELECT id
+                FROM candidate_verification_summary
+                WHERE candidate_id = %s
+                LIMIT 1
             """
 
-            cursor.execute(query, (status, risk_level, candidate_id))
+            cursor.execute(check_query, (candidate_id,))
+            existing = cursor.fetchone()
 
-        else:
-            query = f"""
-            INSERT INTO
-            candidate_verification_summary (
+            if existing:
+                query = f"""
+                    UPDATE candidate_verification_summary
+                    SET
+                        {column_name} = %s,
+                        risk_level = COALESCE(%s, risk_level),
+                        updated_at = NOW()
+                    WHERE candidate_id = %s
+                """
 
-                candidate_id,
-                candidate_name,
-                email,
-                phone,
-                {column_name},
-                risk_level
+                cursor.execute(
+                    query,
+                    (
+                        status,
+                        risk_level,
+                        candidate_id,
+                    ),
+                )
 
-            )
+            else:
+                query = f"""
+                    INSERT INTO candidate_verification_summary (
+                        candidate_id,
+                        candidate_name,
+                        email,
+                        phone,
+                        {column_name},
+                        risk_level,
+                        created_at,
+                        updated_at
+                    )
+                    VALUES (
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        NOW(),
+                        NOW()
+                    )
+                """
 
-            VALUES (
+                cursor.execute(
+                    query,
+                    (
+                        candidate_id,
+                        candidate_name,
+                        email,
+                        phone,
+                        status,
+                        risk_level,
+                    ),
+                )
 
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s
-            )
-            """
+            connection.commit()
 
-            cursor.execute(
-                query, (candidate_id, candidate_name, email, phone, status, risk_level)
-            )
+            print("=" * 80)
+            print("VERIFICATION SUMMARY UPDATED")
+            print("CANDIDATE ID:", candidate_id)
+            print("COLUMN:", column_name)
+            print("STATUS:", status)
+            print("EXISTING ROW:", bool(existing))
+            print("=" * 80)
 
-        connection.commit()
+            return {
+                "success": True,
+                "candidate_id": candidate_id,
+                "column": column_name,
+                "status": status,
+            }
 
-        cursor.close()
+        except Exception:
+            connection.rollback()
+            raise
 
-        connection.close()
-
-        return {"success": True}
+        finally:
+            cursor.close()
+            connection.close()
 
     @staticmethod
     def get_candidate_summary(candidate_id):
@@ -552,6 +589,7 @@ WHERE
             "Driving License Verification": "dl_status",
             "Deepfake Detection": "deepfake_status",
             "Salary Slip Verification": "salary_slip_status",
+            "Bank Statement Verification": "bank_statement_status",
         }
 
         column = module_map.get(module)
@@ -606,6 +644,7 @@ WHERE
             "Driving License Verification": "dl_status",
             "Deepfake Detection": "deepfake_status",
             "Salary Slip Verification": "salary_slip_status",
+            "Bank Statement Verification": "bank_statement_status",
         }
 
         column = module_map.get(module)
@@ -666,6 +705,7 @@ WHERE
             "Driving License Verification": "dl_status",
             "Deepfake Detection": "deepfake_status",
             "Salary Slip Verification": "salary_slip_status",
+            "Bank Statement Verification": "bank_statement_status",
         }
 
         column = module_map.get(module)
@@ -727,3 +767,46 @@ WHERE
         connection.close()
 
         return result
+
+    @staticmethod
+    def create_candidate_summary(
+        candidate_id,
+        candidate_name,
+        email,
+        phone,
+    ):
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        try:
+            query = """
+                INSERT INTO candidate_verification_summary (
+                    candidate_id,
+                    candidate_name,
+                    email,
+                    phone
+                )
+                VALUES (%s, %s, %s, %s)
+            """
+
+            cursor.execute(
+                query,
+                (
+                    candidate_id,
+                    candidate_name,
+                    email,
+                    phone,
+                ),
+            )
+
+            connection.commit()
+
+            return True
+
+        except Exception:
+            connection.rollback()
+            raise
+
+        finally:
+            cursor.close()
+            connection.close()

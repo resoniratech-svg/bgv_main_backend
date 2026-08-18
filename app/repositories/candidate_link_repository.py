@@ -1,4 +1,4 @@
-from flask import Config
+# from flask import Config
 from config import Config
 
 from app.database.connection import get_connection
@@ -109,6 +109,35 @@ class CandidateLinkRepository:
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at)
 
-        if datetime.utcnow() > expires_at:
+        if datetime.now() > expires_at:
             return {"status": "error", "message": "Link expired"}
         return {"status": "success", "message": "Valid secure link", "data": result}
+
+    @staticmethod
+    def get_latest_bgv_for_candidate(candidate_id):
+
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        try:
+            query = """
+            SELECT
+                id,
+                candidate_id,
+                bgv_id,
+                company_name,
+                status
+            FROM bgv_requests
+            WHERE candidate_id = %s
+            AND is_deleted = 0
+            ORDER BY id DESC
+            LIMIT 1
+            """
+
+            cursor.execute(query, (candidate_id,))
+
+            return cursor.fetchone()
+
+        finally:
+            cursor.close()
+            connection.close()

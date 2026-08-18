@@ -1,31 +1,35 @@
 from app.services.ai_service_connector import AIServiceConnector
 
 
-class PassportService:
-    @staticmethod
-    def verify_passport(
-        candidate_id,
-        bgv_id,
-        front_document_id,
-        back_document_id,
-        token,
-    ):
+class CCRVService:
+    # ==========================================
+    # VERIFY CCRV
+    # ==========================================
 
-        return AIServiceConnector.verify_passport(
+    @staticmethod
+    def verify_ccrv(candidate_id, bgv_id, token):
+
+        return AIServiceConnector.verify_ccrv(
             candidate_id=candidate_id,
             bgv_id=bgv_id,
-            front_document_id=front_document_id,
-            back_document_id=back_document_id,
             token=token,
         )
+
+    # ==========================================
+    # GET CCRV RESULT
+    # ==========================================
 
     @staticmethod
     def get_result(candidate_id, token):
 
-        return AIServiceConnector.get_passport_result(
-            candidate_id,
-            token,
+        return AIServiceConnector.get_ccrv_result(
+            candidate_id=candidate_id,
+            token=token,
         )
+
+    # ==========================================
+    # SAVE CCRV DECISION
+    # ==========================================
 
     @staticmethod
     def save_decision(data):
@@ -42,8 +46,16 @@ class PassportService:
 
         from app.services.notification_service import NotificationService
 
+        # =====================================
+        # GET DATA
+        # =====================================
+
         candidate_id = data.get("candidate_id")
         decision = data.get("decision")
+
+        # =====================================
+        # VALIDATE CANDIDATE ID
+        # =====================================
 
         if not candidate_id:
             return {
@@ -51,11 +63,19 @@ class PassportService:
                 "message": "candidate_id is required",
             }
 
+        # =====================================
+        # VALIDATE DECISION
+        # =====================================
+
         if not decision:
             return {
                 "status": "error",
                 "message": "decision is required",
             }
+
+        # =====================================
+        # ALLOWED DECISIONS
+        # =====================================
 
         allowed_decisions = [
             "Verified",
@@ -67,8 +87,12 @@ class PassportService:
         if decision not in allowed_decisions:
             return {
                 "status": "error",
-                "message": "Invalid Passport decision",
+                "message": "Invalid Court Record decision",
             }
+
+        # =====================================
+        # GET EXISTING SUMMARY
+        # =====================================
 
         summary = CandidateVerificationSummaryRepository.get_by_candidate_id(
             candidate_id
@@ -77,15 +101,15 @@ class PassportService:
         old_decision = None
 
         if summary:
-            old_decision = summary.get("passport_status")
+            old_decision = summary.get("court_status")
 
         # =====================================
-        # UPDATE PASSPORT DECISION
+        # UPDATE COURT RECORD STATUS
         # =====================================
 
         result = CandidateVerificationSummaryService.update_module_status(
             candidate_id=candidate_id,
-            module_name="Passport",
+            module_name="Court Record",
             status=decision,
         )
 
@@ -99,9 +123,10 @@ class PassportService:
         if decision == "Verified":
             NotificationService.create_notification(
                 candidate_id=candidate_id,
-                title="Passport Verified",
+                title="Court Record Verified",
                 description=(
-                    "Passport verification has been verified by the reviewer."
+                    "Court and criminal record verification has been "
+                    "verified by the reviewer."
                 ),
                 notification_type="Success",
             )
@@ -109,9 +134,10 @@ class PassportService:
         elif decision == "Not Verified":
             NotificationService.create_notification(
                 candidate_id=candidate_id,
-                title="Passport Not Verified",
+                title="Court Record Not Verified",
                 description=(
-                    "Passport verification has been marked as not verified by the reviewer."
+                    "Court and criminal record verification has been "
+                    "marked as not verified by the reviewer."
                 ),
                 notification_type="Warning",
             )
@@ -119,9 +145,10 @@ class PassportService:
         elif decision == "Fraud":
             NotificationService.create_notification(
                 candidate_id=candidate_id,
-                title="Passport Fraud Detected",
+                title="Court Record Fraud Detected",
                 description=(
-                    "Passport verification has been marked as fraudulent by the reviewer."
+                    "Court and criminal record verification has been "
+                    "marked as fraudulent by the reviewer."
                 ),
                 notification_type="Critical",
             )
@@ -129,9 +156,10 @@ class PassportService:
         elif decision == "Rejected":
             NotificationService.create_notification(
                 candidate_id=candidate_id,
-                title="Passport Rejected",
+                title="Court Record Rejected",
                 description=(
-                    "Passport verification has been rejected by the reviewer."
+                    "Court and criminal record verification has been "
+                    "rejected by the reviewer."
                 ),
                 notification_type="Warning",
             )
@@ -141,12 +169,12 @@ class PassportService:
         # =====================================
 
         AuditService.log_action(
-            action="PASSPORT_DECISION",
-            module_name="Passport",
+            action="COURT_RECORD_DECISION",
+            module_name="Court Record",
             entity_type="candidate",
             entity_id=candidate_id,
             status="SUCCESS",
-            remarks=f"Passport decision updated to {decision}",
+            remarks=f"Court Record decision updated to {decision}",
             old_values={
                 "decision": old_decision,
             },
@@ -155,7 +183,11 @@ class PassportService:
             },
         )
 
+        # =====================================
+        # RETURN
+        # =====================================
+
         return {
             "status": "success",
-            "message": "Passport decision saved",
+            "message": "Court Record decision saved",
         }

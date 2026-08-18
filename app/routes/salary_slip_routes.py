@@ -1,105 +1,161 @@
-from flask import Blueprint, jsonify
-import traceback
-from app.services.salary_slip_service import SalarySlipService
-from app.services.candidate_verification_summary_service import (
-    CandidateVerificationSummaryService,
-)
-from app.services.notification_service import NotificationService
+from flask import Blueprint
 from flask import request
+from flask import jsonify
 
-salary_slip_bp = Blueprint("salary_slip_bp", __name__)
+from flask_jwt_extended import jwt_required
+
+from app.services.salary_slip_service import SalarySlipService
 
 
-@salary_slip_bp.route("/salary-slip/<int:candidate_id>/verify", methods=["POST"])
-def verify_salary_slip(candidate_id):
+salary_slip_bp = Blueprint("salary_slip", __name__)
+
+
+###############################################################
+# SALARY SLIP OCR
+###############################################################
+
+
+@salary_slip_bp.route("/ocr", methods=["POST"])
+@jwt_required()
+def verify_salary_slip():
 
     try:
-        result = SalarySlipService.verify_candidate_salary_slip(candidate_id)
+        ###################################################
+        # REQUEST
+        ###################################################
 
-        if not result.get("success"):
-            return jsonify(result), 400
+        data = request.get_json()
+
+        if not data:
+            return jsonify(
+                {"status": "error", "message": "Request body is required."}
+            ), 400
+
+        ###################################################
+        # INPUTS
+        ###################################################
+
+        candidate_id = data.get("candidate_id")
+
+        bgv_id = data.get("bgv_id")
+
+        document_id = data.get("document_id")
+
+        token = request.headers.get("Authorization")
+
+        ###################################################
+        # OCR
+        ###################################################
+
+        result = SalarySlipService.verify_salary_slip(
+            candidate_id=candidate_id,
+            bgv_id=bgv_id,
+            document_id=document_id,
+            token=token,
+        )
 
         return jsonify(result), 200
 
-    except Exception as e:
-        print("\n========== SALARY SLIP ERROR ==========")
-        traceback.print_exc()
-        print("=======================================\n")
+    except Exception as error:
+        print("=" * 80)
+        print("SALARY SLIP OCR ERROR")
+        print(error)
+        print("=" * 80)
+
+        return jsonify({"status": "error", "message": str(error)}), 500
+
+
+###############################################################
+# GET SALARY SLIP OCR RESULT
+###############################################################
+
+
+@salary_slip_bp.route("/result/<int:candidate_id>", methods=["GET"])
+@jwt_required()
+def get_salary_slip_result(candidate_id):
+
+    try:
+        token = request.headers.get("Authorization")
+
+        result = SalarySlipService.get_result(candidate_id, token)
+
+        return jsonify(result), 200
+
+    except Exception as error:
+        print("=" * 80)
+        print("SALARY SLIP RESULT ERROR")
+        print(error)
+        print("=" * 80)
+
+        return jsonify({"status": "error", "message": str(error)}), 500
+
+
+# @salary_slip_bp.route("/decision", methods=["POST"])
+# @jwt_required()
+# def save_salary_slip_decision():
+
+#     try:
+#         data = request.get_json()
+
+#         if not data:
+#             return jsonify(
+#                 {"success": False, "message": "Request body is required."}
+#             ), 400
+
+#         result = SalarySlipService.save_decision(data)
+
+#         return jsonify(result), 200
+
+#     except Exception as error:
+#         print("=" * 80)
+#         print("SALARY SLIP DECISION ERROR")
+#         print(error)
+#         print("=" * 80)
+
+#         return jsonify({"success": False, "message": str(error)}), 500
+
+
+###############################################################
+# SALARY SLIP DECISION
+###############################################################
+
+
+@salary_slip_bp.route("/decision", methods=["POST"])
+@jwt_required()
+def save_salary_slip_decision():
+
+    try:
+        ###################################################
+        # REQUEST
+        ###################################################
+
+        data = request.get_json()
+
+        if not data:
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "Request body is required.",
+                }
+            ), 400
+
+        ###################################################
+        # DECISION
+        ###################################################
+
+        result = SalarySlipService.save_decision(data)
+
+        return jsonify(result), 200
+
+    except Exception as error:
+        print("=" * 80)
+        print("SALARY SLIP DECISION ERROR")
+        print(error)
+        print("=" * 80)
 
         return jsonify(
             {
                 "success": False,
-                "message": "Salary slip verification failed",
-                "error": str(e),
+                "message": str(error),
             }
         ), 500
-
-
-@salary_slip_bp.route("/salary-slip/decision", methods=["POST"])
-def update_salary_slip_decision():
-
-    from app.repositories.candidate_verification_summary_repository import (
-        CandidateVerificationSummaryRepository,
-    )
-
-    from app.services.audit_service import AuditService
-
-    data = request.json
-
-    candidate_id = data.get("candidate_id")
-    decision = data.get("decision")
-
-    summary = CandidateVerificationSummaryRepository.get_by_candidate_id(candidate_id)
-
-    old_decision = None
-
-    if summary:
-        old_decision = summary.get("salary_slip_status")
-
-    result = CandidateVerificationSummaryService.update_module_status(
-        candidate_id=candidate_id,
-        module_name="Salary Slip",
-        status=decision,
-    )
-
-    AuditService.log_action(
-        action="SALARY_SLIP_DECISION",
-        module_name="SALARY_SLIP",
-        entity_type="candidate",
-        entity_id=candidate_id,
-        status="SUCCESS",
-        remarks=f"Salary Slip decision updated to {decision}",
-        old_values={
-            "decision": old_decision,
-        },
-        new_values={
-            "decision": decision,
-        },
-    )
-    NotificationService.create_notification(
-        candidate_id=candidate_id,
-        title="Salary Slip Decision Updated",
-        description=f"Salary Slip verification marked as '{decision}'.",
-        notification_type="Success",
-    )
-    return jsonify(result)
-
-
-@salary_slip_bp.route("/salary-slip/<int:candidate_id>/result", methods=["GET"])
-def get_salary_slip_result(candidate_id):
-
-    try:
-        result = SalarySlipService.get_salary_slip_result(candidate_id)
-
-        return jsonify(result), 200
-
-    except Exception as e:
-        traceback.print_exc()
-
-        print()
-        print("SALARY RESULT ERROR")
-        print(type(e))
-        print(e)
-        print()
-
-        return jsonify({"success": False, "message": str(e)}), 500

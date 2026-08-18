@@ -19,11 +19,13 @@ class CandidateVerificationSummaryService:
             "PAN": "pan_status",
             "Passport": "passport_status",
             "Face Match": "face_match_status",
+            "Driving License": "dl_status",
             "Deepfake Detection": "deepfake_status",
             "Resume Parsing": "resume_status",
             "Education": "education_status",
             "Employment": "employment_status",
             "Salary Slip": "salary_slip_status",
+            "Bank Statement": "bank_statement_status",
             "Credit Bureau": "credit_status",
             "Court Record": "court_status",
             "Watchlist": "watchlist_status",
@@ -106,6 +108,7 @@ class CandidateVerificationSummaryService:
             "credit": "credit_status",
             "court": "court_status",
             "watchlist": "watchlist_status",
+            "bank-statement": "bank_statement_status",
         }
 
         column_name = column_mapping.get(module_name)
@@ -134,6 +137,7 @@ class CandidateVerificationSummaryService:
             "credit": "credit_status",
             "court": "court_status",
             "watchlist": "watchlist_status",
+            "bank-statement": "bank_statement_status",
         }
 
         column_name = column_mapping.get(module_name)
@@ -160,6 +164,7 @@ class CandidateVerificationSummaryService:
             "credit": "credit_status",
             "court": "court_status",
             "watchlist": "watchlist_status",
+            "bank-statement": "bank_statement_status",
         }
 
         column_name = column_mapping.get(module_name)
@@ -170,3 +175,35 @@ class CandidateVerificationSummaryService:
         return CandidateVerificationSummaryRepository.get_candidates_by_status(
             column_name, status
         )
+
+    @staticmethod
+    def initialize_candidate_summary(candidate_id):
+        candidate = CandidateRepository.get_candidate_by_id(candidate_id)
+
+        if not candidate:
+            return {
+                "success": False,
+                "message": "Candidate not found",
+            }
+
+        existing = CandidateVerificationSummaryRepository.get_by_candidate_id(
+            candidate_id
+        )
+
+        if existing:
+            return {
+                "success": True,
+                "message": "Candidate summary already exists",
+            }
+
+        CandidateVerificationSummaryRepository.create_candidate_summary(
+            candidate_id=candidate_id,
+            candidate_name=candidate["full_name"],
+            email=candidate["email"],
+            phone=candidate["phone"],
+        )
+
+        return {
+            "success": True,
+            "message": "Candidate verification summary created",
+        }

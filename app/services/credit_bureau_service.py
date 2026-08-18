@@ -1,32 +1,69 @@
-from app.services.ai_service_connector import AIServiceConnector
 from app.repositories.candidate_repository import CandidateRepository
+from app.services.ai_service_connector import AIServiceConnector
 
 
-class EmploymentService:
+class CreditBureauService:
     @staticmethod
-    def verify_employment(candidate_id, bgv_id, token):
+    def verify_credit_bureau(candidate_id, bgv_id, token):
+        print("=" * 80)
+        print("INSIDE CreditBureauService")
+        print("candidate_id =", candidate_id)
+        print("bgv_id =", bgv_id)
+        print("=" * 80)
+
+        ####################################################
+        # GET CANDIDATE
+        ####################################################
         candidate = CandidateRepository.get_candidate_by_id(candidate_id)
+        print("Candidate Object:", candidate)
 
         if not candidate:
             raise Exception("Candidate not found.")
 
-        mobile_number = CandidateRepository.get_candidate_mobile(candidate_id)
+        ####################################################
+        # REQUIRED FIELDS
+        ####################################################
+        first_name = candidate.get("first_name")
+        last_name = candidate.get("last_name") or ""
+        phone = candidate.get("phone")
 
-        if not mobile_number:
-            raise Exception("Candidate mobile number not found.")
+        # Moved print statements down so variables are defined before printing
+        print(f"First Name: {first_name}")
+        print(f"Last Name: {last_name}")
+        print(f"Phone: {phone}")
 
-        return AIServiceConnector.verify_employment(
+        ####################################################
+        # VALIDATIONS
+        ####################################################
+        if not first_name:
+            raise Exception("Candidate first name not found.")
+
+        if not phone:
+            raise Exception("Candidate phone number not found.")
+
+        ####################################################
+        # AI SERVICE
+        ####################################################
+        print("CALLING AI CONNECTOR")
+        return AIServiceConnector.verify_credit_bureau(
             candidate_id=candidate_id,
             bgv_id=bgv_id,
-            mobile_number=mobile_number,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
             token=token,
         )
 
+    ####################################################
+    # RESULT
+    ####################################################
     @staticmethod
     def get_result(candidate_id, token):
-        return AIServiceConnector.get_employment_result(
-            candidate_id=candidate_id, token=token
-        )
+        return AIServiceConnector.get_credit_bureau_result(candidate_id, token)
+        ####################################################
+
+    # SAVE CREDIT BUREAU DECISION
+    ####################################################
 
     @staticmethod
     def save_decision(data):
@@ -80,7 +117,7 @@ class EmploymentService:
         if decision not in allowed_decisions:
             return {
                 "status": "error",
-                "message": "Invalid Employment decision",
+                "message": "Invalid Credit Bureau decision",
             }
 
         # =====================================
@@ -94,15 +131,15 @@ class EmploymentService:
         old_decision = None
 
         if summary:
-            old_decision = summary.get("employment_status")
+            old_decision = summary.get("credit_status")
 
         # =====================================
-        # UPDATE EMPLOYMENT DECISION
+        # UPDATE CREDIT BUREAU DECISION
         # =====================================
 
         result = CandidateVerificationSummaryService.update_module_status(
             candidate_id=candidate_id,
-            module_name="Employment",
+            module_name="Credit Bureau",
             status=decision,
         )
 
@@ -116,9 +153,9 @@ class EmploymentService:
         if decision == "Verified":
             NotificationService.create_notification(
                 candidate_id=candidate_id,
-                title="Employment Verified",
+                title="Credit Bureau Verified",
                 description=(
-                    "Employment verification has been verified by the reviewer."
+                    "Credit Bureau verification has been verified by the reviewer."
                 ),
                 notification_type="Success",
             )
@@ -126,9 +163,10 @@ class EmploymentService:
         elif decision == "Not Verified":
             NotificationService.create_notification(
                 candidate_id=candidate_id,
-                title="Employment Not Verified",
+                title="Credit Bureau Not Verified",
                 description=(
-                    "Employment verification has been marked as not verified by the reviewer."
+                    "Credit Bureau verification has been marked as not verified "
+                    "by the reviewer."
                 ),
                 notification_type="Warning",
             )
@@ -136,9 +174,10 @@ class EmploymentService:
         elif decision == "Fraud":
             NotificationService.create_notification(
                 candidate_id=candidate_id,
-                title="Employment Fraud Detected",
+                title="Credit Bureau Fraud Detected",
                 description=(
-                    "Employment verification has been marked as fraudulent by the reviewer."
+                    "Credit Bureau verification has been marked as fraudulent "
+                    "by the reviewer."
                 ),
                 notification_type="Critical",
             )
@@ -146,9 +185,9 @@ class EmploymentService:
         elif decision == "Rejected":
             NotificationService.create_notification(
                 candidate_id=candidate_id,
-                title="Employment Rejected",
+                title="Credit Bureau Rejected",
                 description=(
-                    "Employment verification has been rejected by the reviewer."
+                    "Credit Bureau verification has been rejected by the reviewer."
                 ),
                 notification_type="Warning",
             )
@@ -158,12 +197,12 @@ class EmploymentService:
         # =====================================
 
         AuditService.log_action(
-            action="EMPLOYMENT_DECISION",
-            module_name="Employment",
+            action="CREDIT_BUREAU_DECISION",
+            module_name="Credit Bureau",
             entity_type="candidate",
             entity_id=candidate_id,
             status="SUCCESS",
-            remarks=f"Employment decision updated to {decision}",
+            remarks=f"Credit Bureau decision updated to {decision}",
             old_values={
                 "decision": old_decision,
             },
@@ -178,5 +217,5 @@ class EmploymentService:
 
         return {
             "status": "success",
-            "message": "Employment decision saved",
+            "message": "Credit Bureau decision saved",
         }
