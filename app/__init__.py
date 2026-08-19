@@ -241,8 +241,19 @@ def create_app():
     # ==============================
     register_error_handlers(app)
 
+    @app.route("/init-db")
+    def init_db():
+        try:
+            db.create_all()
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            return {"status": "success", "tables": tables}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}, 500
+
     # ==============================
-    # Database Health Check
+    # Database Health Check & Migration
     # ==============================
     with app.app_context():
         try:
@@ -251,7 +262,9 @@ def create_app():
             db.create_all()
             print("Database tables initialized successfully.")
         except Exception as e:
-            print(f"Database connection failed: {str(e)}")
+            import traceback
+            print(f"Database connection or table creation failed: {str(e)}")
+            traceback.print_exc()
 
     # ==============================
     # Print Registered Routes
