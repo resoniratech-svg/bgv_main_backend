@@ -1,4 +1,5 @@
 from .user import User
+from .candidate import Candidate
 from .bgv_request import BGVRequest
 from .verification_result import VerificationResult
 from .verification_type import VerificationType

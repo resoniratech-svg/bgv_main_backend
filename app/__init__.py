@@ -248,7 +248,8 @@ def create_app():
         try:
             db.session.execute(text("SELECT 1"))
             print("Database connection successful.")
-
+            db.create_all()
+            print("Database tables initialized successfully.")
         except Exception as e:
             print(f"Database connection failed: {str(e)}")
 
