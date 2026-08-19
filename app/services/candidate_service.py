@@ -28,3 +28,22 @@ class CandidateService:
             "message": "Candidate created successfully",
             "data": result
         }
+
+    @staticmethod
+    def get_all_candidates():
+        candidates = CandidateRepository.get_all_candidates()
+        # Convert datetime objects to string for JSON serialization
+        for c in candidates:
+            for key, value in c.items():
+                if hasattr(value, 'isoformat'):
+                    c[key] = value.isoformat()
+        return candidates
+
+    @staticmethod
+    def get_candidate_by_id(candidate_id: int):
+        candidate = CandidateRepository.get_candidate_by_id(candidate_id)
+        if candidate:
+            for key, value in candidate.items():
+                if hasattr(value, 'isoformat'):
+                    candidate[key] = value.isoformat()
+        return candidate

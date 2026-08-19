@@ -49,6 +49,46 @@ class CandidateRepository:
             connection.close()
 
     @staticmethod
+    def get_all_candidates() -> list:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        query = """
+        SELECT
+            id, candidate_code, first_name, last_name, email, phone,
+            status, date_of_birth, gender, created_at, updated_at
+        FROM candidates
+        ORDER BY created_at DESC
+        """
+
+        try:
+            cursor.execute(query)
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+            connection.close()
+
+    @staticmethod
+    def get_candidate_by_id(candidate_id: int) -> dict:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        query = """
+        SELECT
+            id, candidate_code, first_name, last_name, email, phone,
+            status, date_of_birth, gender, created_at, updated_at
+        FROM candidates
+        WHERE id = %s
+        """
+
+        try:
+            cursor.execute(query, (candidate_id,))
+            return cursor.fetchone()
+        finally:
+            cursor.close()
+            connection.close()
+
+    @staticmethod
     def update_candidate_profile(candidate_id: int, date_of_birth: str, gender: str) -> bool:
         connection = get_connection()
         cursor = connection.cursor()
