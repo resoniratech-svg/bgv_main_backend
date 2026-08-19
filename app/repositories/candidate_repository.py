@@ -51,7 +51,7 @@ class CandidateRepository:
     @staticmethod
     def get_all_candidates() -> list:
         connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -71,7 +71,7 @@ class CandidateRepository:
     @staticmethod
     def get_candidate_by_id(candidate_id: int) -> dict:
         connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor()
 
         query = """
         SELECT
