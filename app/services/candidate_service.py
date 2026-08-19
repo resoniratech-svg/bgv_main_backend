@@ -32,8 +32,9 @@ class CandidateService:
     @staticmethod
     def get_all_candidates():
         candidates = CandidateRepository.get_all_candidates()
-        # Convert datetime objects to string for JSON serialization
+        # Convert datetime objects to string for JSON serialization and add full_name
         for c in candidates:
+            c['full_name'] = f"{c.get('first_name') or ''} {c.get('last_name') or ''}".strip()
             for key, value in c.items():
                 if hasattr(value, 'isoformat'):
                     c[key] = value.isoformat()
