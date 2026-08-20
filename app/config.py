@@ -31,8 +31,8 @@ class BaseConfig:
         "bgv_ai_enterprise_jwt_secret_key_2026_secure"
     )
 
-    # Access Token Expiry
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
+    # Access Token Expiry (30 Days)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=30)
 
     # Refresh Token Expiry
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=7)
