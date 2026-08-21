@@ -7,3 +7,4 @@ from .audit_log import AuditLog
 from .fraud_check import FraudCheck
 from .risk_flag import RiskFlag
 from .consent_record import ConsentRecord
+from .candidate_verification_summary import CandidateVerificationSummary
