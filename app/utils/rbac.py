@@ -11,9 +11,10 @@ def role_required(*allowed_roles):
         def wrapper(*args, **kwargs):
 
             claims = get_jwt()
-            user_role = claims.get("role")
+            user_role = str(claims.get("role", "")).upper()
+            normalized_allowed = [r.upper() for r in allowed_roles]
 
-            if user_role not in allowed_roles:
+            if user_role not in ["SUPER_ADMIN", "ADMIN"] and user_role not in normalized_allowed:
 
                 current_app.logger.warning(
                     f"Access denied for role: {user_role}"
