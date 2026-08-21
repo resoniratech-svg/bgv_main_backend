@@ -245,7 +245,26 @@ def create_app():
     def init_db():
         try:
             db.create_all()
-            from sqlalchemy import inspect
+            from sqlalchemy import inspect, text
+            
+            # Ensure missing columns on bgv_requests table are safely added if missing
+            missing_cols = [
+                ("candidate_name", "VARCHAR(100) DEFAULT ''"),
+                ("email", "VARCHAR(120) DEFAULT ''"),
+                ("phone", "VARCHAR(20) DEFAULT ''"),
+                ("status", "VARCHAR(50) DEFAULT 'Initiated'"),
+                ("trust_score", "FLOAT DEFAULT 0.0"),
+                ("final_decision", "VARCHAR(50) NULL"),
+                ("is_locked", "TINYINT(1) DEFAULT 0"),
+                ("is_deleted", "TINYINT(1) DEFAULT 0"),
+            ]
+            for col, col_type in missing_cols:
+                try:
+                    db.session.execute(text(f"ALTER TABLE bgv_requests ADD COLUMN {col} {col_type}"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             return {"status": "success", "tables": tables}
