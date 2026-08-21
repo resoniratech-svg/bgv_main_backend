@@ -1,7 +1,16 @@
 from flask import jsonify
+from app.utils.exceptions import FraudException
 
 
 def register_error_handlers(app):
+
+    @app.errorhandler(FraudException)
+    def handle_fraud_exception(error):
+
+        return jsonify({
+            "status": "error",
+            "message": error.message
+        }), error.status_code
 
     @app.errorhandler(404)
     def not_found(error):

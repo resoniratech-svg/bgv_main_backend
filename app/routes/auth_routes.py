@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.models.user import User
 from app.extensions import db
 
@@ -72,14 +72,37 @@ def login():
 
      
         access_token = create_access_token(
-        identity=str(user.id),
-        additional_claims={"role": "SUPER_ADMIN"}
+            identity=str(user.id),
+            additional_claims={"role": user.role or "SUPER_ADMIN"}
         )
         return jsonify({
             "access_token": access_token,
             "username": user.username,
-            "role": "SUPER_ADMIN"
+            "role": user.role or "SUPER_ADMIN"
         }), 200
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ===============================
+# GET CURRENT USER PROFILE
+# ===============================
+@auth_bp.route("/me", methods=["GET"])
+@jwt_required()
+def get_current_user():
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(int(current_user_id))
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({
+            "id": user.id,
+            "username": user.username,
+            "role": user.role or "SUPER_ADMIN",
+            "is_active": user.is_active
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
