@@ -257,6 +257,8 @@ def create_app():
                 ("final_decision", "VARCHAR(50) NULL"),
                 ("is_locked", "TINYINT(1) DEFAULT 0"),
                 ("is_deleted", "TINYINT(1) DEFAULT 0"),
+                ("created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP"),
+                ("updated_at", "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
             ]
             for col, col_type in missing_cols:
                 try:
