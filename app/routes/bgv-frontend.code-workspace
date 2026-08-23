@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "../../../bgv-frontend"
+		},
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../BGV_AI_SERVICES"
+		},
+		{
+			"path": "../../../resume_parser_demo"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "bgv-frontend"
+	}
+}
