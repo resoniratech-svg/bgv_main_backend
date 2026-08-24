@@ -146,8 +146,6 @@ def save_candidate_consent():
 
         secure_token = data.get("secure_token")
 
-        candidate_id = data.get("candidate_id")
-        bgv_id = data.get("bgv_id")
         verification_type = data.get("verification_type")
         consent_status = data.get("consent_status")
         consent_text = data.get("consent_text")
@@ -155,7 +153,7 @@ def save_candidate_consent():
         consent_source = data.get("consent_source", "PORTAL")
 
         ####################################################
-        # VALIDATIONS
+        # VALIDATE REQUIRED FIELDS
         ####################################################
 
         if not secure_token:
@@ -163,27 +161,19 @@ def save_candidate_consent():
                 {"status": "error", "message": "secure_token is required"}
             ), 400
 
-        if not candidate_id:
-            return jsonify(
-                {"status": "error", "message": "candidate_id is required."}
-            ), 400
-
-        if not bgv_id:
-            return jsonify({"status": "error", "message": "bgv_id is required."}), 400
-
         if not verification_type:
             return jsonify(
-                {"status": "error", "message": "verification_type is required."}
+                {"status": "error", "message": "verification_type is required"}
             ), 400
 
         if not consent_status:
             return jsonify(
-                {"status": "error", "message": "consent_status is required."}
+                {"status": "error", "message": "consent_status is required"}
             ), 400
 
         if not consent_text:
             return jsonify(
-                {"status": "error", "message": "consent_text is required."}
+                {"status": "error", "message": "consent_text is required"}
             ), 400
 
         ####################################################
@@ -198,31 +188,22 @@ def save_candidate_consent():
         link_data = link_result.get("data", {})
 
         ####################################################
-        # VERIFY CANDIDATE
+        # GET CANDIDATE + BGV FROM SECURE TOKEN
         ####################################################
 
-        if int(link_data["candidate_id"]) != int(candidate_id):
-            return jsonify(
-                {
-                    "status": "error",
-                    "message": "Secure token does not belong to this candidate.",
-                }
-            ), 403
+        candidate_id = link_data["candidate_id"]
+        bgv_id = link_data["bgv_id"]
+
+        print("=" * 80)
+        print("CANDIDATE CONSENT")
+        print("SECURE TOKEN:", secure_token)
+        print("CANDIDATE ID:", candidate_id)
+        print("BGV ID:", bgv_id)
+        print("VERIFICATION TYPE:", verification_type)
+        print("=" * 80)
 
         ####################################################
-        # VERIFY BGV
-        ####################################################
-
-        if str(link_data["bgv_id"]) != str(bgv_id):
-            return jsonify(
-                {
-                    "status": "error",
-                    "message": "Secure token does not belong to this BGV request.",
-                }
-            ), 403
-
-        ####################################################
-        # CALL CONSENT SERVICE
+        # SAVE CONSENT
         ####################################################
 
         result = ConsentService.save_candidate_consent(
@@ -238,6 +219,8 @@ def save_candidate_consent():
         return jsonify(result), 200
 
     except Exception as error:
-        print("SAVE CANDIDATE CONSENT ERROR:", error)
+        import traceback
+
+        traceback.print_exc()
 
         return jsonify({"status": "error", "message": str(error)}), 500
