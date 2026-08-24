@@ -12,32 +12,71 @@ from app.services.notification_service import NotificationService
 class ResumeService:
     @staticmethod
     def parse_resume(candidate_id):
+
         resume_document = DocumentRepository.get_resume_document(candidate_id)
 
         if not resume_document:
             return {"status": "error", "message": "Resume not uploaded"}
 
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-        full_path = os.path.join(project_root, resume_document["file_path"])
+        # ==========================================================
+        # RESOLVE RESUME FILE PATH
+        # ==========================================================
 
-        if not os.path.exists(full_path):
-            return {"status": "error", "message": "Resume file not found"}
+        file_path = resume_document["file_path"]
+
+        if os.path.isabs(file_path):
+            full_path = file_path
+        else:
+            full_path = os.path.abspath(file_path)
+
+        full_path = os.path.normpath(full_path)
+
+        # ==========================================================
+        # DEBUG
+        # ==========================================================
+
+        print("=" * 80)
+        print("RESUME FILE DEBUG")
+        print("=" * 80)
+        print("FILE PATH FROM DATABASE:", file_path)
+        print("FINAL FILE PATH:", full_path)
+        print("FILE EXISTS:", os.path.exists(full_path))
+        print("=" * 80)
+
+        # ==========================================================
+        # VERIFY FILE EXISTS
+        # ==========================================================
+
+        if not os.path.isfile(full_path):
+            return {"status": "error", "message": f"Resume file not found: {full_path}"}
+
+        # ==========================================================
+        # SEND RESUME TO AI SERVICE
+        # ==========================================================
 
         result = AIServiceConnector.parse_resume(full_path, candidate_id)
+
         print("\nAI RESPONSE")
         print(result)
 
+        # ==========================================================
+        # UPDATE VERIFICATION STATUS
+        # ==========================================================
+
         if result.get("success"):
             candidate = CandidateRepository.get_candidate_by_id(candidate_id)
+
             candidate_name = (
                 f"{candidate['first_name']} {candidate.get('last_name', '')}"
             )
+
             NotificationService.create_notification(
                 candidate_id=candidate_id,
                 title="Resume Parsed Successfully",
-                description="Resume has been parsed and extracted successfully.",
+                description=("Resume has been parsed and extracted successfully."),
                 notification_type="Success",
             )
+
             CandidateVerificationSummaryRepository.create_or_update_module_status(
                 candidate_id=candidate_id,
                 candidate_name=candidate_name,
@@ -47,6 +86,10 @@ class ResumeService:
                 status="Verified",
                 risk_level="LOW",
             )
+
+        # ==========================================================
+        # RESPONSE
+        # ==========================================================
 
         return {
             "status": "success",
