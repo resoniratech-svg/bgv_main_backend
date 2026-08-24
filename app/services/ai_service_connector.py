@@ -574,10 +574,11 @@ class AIServiceConnector:
         consent_text,
         consent_version,
         consent_source,
-        token,
     ):
         url = f"{AI_SERVICE_BASE_URL}/candidate-consent"
-        headers = {"Authorization": token, "Content-Type": "application/json"}
+
+        headers = {"Content-Type": "application/json"}
+
         payload = {
             "candidate_id": candidate_id,
             "bgv_id": bgv_id,
@@ -588,7 +589,8 @@ class AIServiceConnector:
             "consent_source": consent_source,
         }
 
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+
         return response.json()
 
     ########################################
