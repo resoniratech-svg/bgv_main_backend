@@ -2,8 +2,11 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 from flask import current_app
+
 load_dotenv()
 AI_SERVICE_URL = "http://localhost:5001"
+
+
 # ==========================================
 # BASE CONFIG
 # ==========================================
@@ -21,9 +24,10 @@ class BaseConfig:
     DB_USER = os.getenv("DB_USER", "root")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "")
     DB_NAME = os.getenv("DB_NAME", "bgv_database")
+
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        "mysql+pymysql://root:Akanksha123@127.0.0.1:3306/bgv_database"
+        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
     )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -32,8 +36,7 @@ class BaseConfig:
     # JWT Configuration
     # ==============================
     JWT_SECRET_KEY = os.getenv(
-        "JWT_SECRET_KEY",
-        "bgv_ai_enterprise_jwt_secret_key_2026_secure"
+        "JWT_SECRET_KEY", "bgv_ai_enterprise_jwt_secret_key_2026_secure"
     )
 
     # Access Token Expiry
@@ -93,7 +96,4 @@ config_map = {
 }
 
 
-Config = config_map.get(
-    os.getenv("FLASK_ENV", "development"),
-    DevelopmentConfig
-)
+Config = config_map.get(os.getenv("FLASK_ENV", "development"), DevelopmentConfig)
