@@ -126,15 +126,10 @@ class AadhaarService:
         )
 
         if not summary_result.get("success", False):
-            return {
-                "success": False,
-                "message": (
-                    "Aadhaar result was saved, but candidate "
-                    "verification summary could not be updated"
-                ),
-                "aadhaar_result": result,
-                "summary_result": summary_result,
-            }
+            print("=" * 80)
+            print("WARNING: Candidate verification summary update failed:")
+            print(summary_result)
+            print("=" * 80)
 
         # ==================================================
         # STEP 3
